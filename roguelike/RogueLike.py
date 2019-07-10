@@ -26,6 +26,7 @@ def init_tcod() -> tcod.console.Console:
         vsync=True,
         order='F')
 
+    tcod.sys_set_fps(30)
     tcod.console_set_fullscreen(True)
     return root_console
 
