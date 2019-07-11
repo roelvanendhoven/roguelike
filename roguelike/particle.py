@@ -6,25 +6,25 @@ import random
 
 class Emitter:
 
-    def __init__(self, console, x, y, w, h):
+    def __init__(self, console, pconf: dict, x: int, y: int, w: int, h: int, rate: int = 1):
         self.x = x
         self.y = y
         self.w = w
         self.h = h
 
-        self.pconf = {
-            'fade': 0.0000000001, 'col': (2, 4, 8)
-        }
+        self.rate = rate
+        self.pconf = pconf
 
         self.console: tcod.console.Console = console
         self.particles: List[Particle] = []
 
     def create_particle(self):
-        self.particles.append(
-            Particle(self.x + random.randint(self.x, self.x + self.w), self.y, **self.pconf))
+        for i in range(self.rate):
+            self.particles.append(
+                Particle(self.x + random.randint(0, self.w - 1),
+                         self.y + random.randint(0, self.h - 1), **self.pconf))
 
     def draw(self):
-        self.console.print(1, 1, str(len(self.particles)))
         for p in self.particles:
             p.simulate()
             if p.life <= 0 or p._fadec >= 1:
@@ -34,12 +34,14 @@ class Emitter:
 
 class Particle:
 
-    def __init__(self, x, y, vx: float = 0, vy: float = 0, ax: float = 0, ay: float = 0, col: tuple = (50, 50, 50),
-                 fade: float = 0, length:float = 1, height:float=1):
+    def __init__(self, x, y, vx: tuple = (1, 1), vy: tuple = (-1, -1), ax: float = 0, ay: float = 0,
+                 col: tuple = (50, 50, 50),
+                 fade: float = 0, length: int = 1, height: int = 1, life: int = 50):
         self.x = x
         self.y = y
 
-        self.length = 25
+        self.length = length
+        self.height = height
 
         self.col = col
         self.fade = fade
@@ -48,10 +50,10 @@ class Particle:
         self.ax = ax
         self.ay = ay
 
-        self.vx = random.randint(-5, 5) / 100
-        self.vy = random.randint(-4, -1) / 20
+        self.vx = random.randint(*vx) / 100
+        self.vy = random.randint(*vy) / 20
 
-        self.life = 200
+        self.life = life
 
     def simulate(self):
         self.x += self.vx
@@ -63,7 +65,5 @@ class Particle:
         self.life -= 1
 
     def draw(self, console: tcod.console.Console):
-        console.print(int(self.x), int(self.y), ' ' * self.length, bg=self.col, bg_blend=tcod.BKGND_ADD)
-        console.print(int(self.x), int(self.y - 1), ' ' * self.length, bg=self.col, bg_blend=tcod.BKGND_ADD)
-        console.print(int(self.x), int(self.y - 2), ' ' * self.length, bg=self.col, bg_blend=tcod.BKGND_ADD)
-        console.print(int(self.x), int(self.y - 3), ' ' * self.length, bg=self.col, bg_blend=tcod.BKGND_ADD)
+        for i in range(self.height):
+            console.print(int(self.x), int(self.y - i), ' ' * self.length, bg=self.col, bg_blend=tcod.BKGND_ADD)

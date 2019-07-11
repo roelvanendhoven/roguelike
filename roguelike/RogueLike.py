@@ -32,7 +32,36 @@ def init_tcod() -> tcod.console.Console:
 
 
 def game_loop(console):
-    emitter = particle.Emitter(console, 1, SCREEN_HEIGHT - 1, SCREEN_WIDTH - 23, 1)
+    mist = {
+        'fade': 0.0000000001,
+        'col': (2, 4, 8),
+        'length': 25,
+        'height': 5,
+        'vx': (-5, 5),
+        'vy': (-4, -1),
+        'life': 200
+    }
+
+    rain = {
+        'fade': 0.0005,
+        'col': (20, 20, 40),
+        'vx': (-100, -80),
+        'vy': (70, 100),
+        'life': 90,
+        'height': 2
+    }
+
+    lantern = {
+        'vy': (-10, -5),
+        'vx': (-10, 10),
+        'fade': 0.000000002 ,
+        'col': (30, 25, 10),
+        'life': 140
+    }
+
+    emitter = particle.Emitter(console, mist, 1, SCREEN_HEIGHT - 1, SCREEN_WIDTH - 23, 1)
+    lantern = particle.Emitter(console, lantern, 1540 // 12, 816 // 12, 3, 1)
+    rain = particle.Emitter(console, rain, 1, 0, SCREEN_WIDTH - 2, 1, rate=3)
     bee = open('assets/bee.txt').read()
     wiz = tcod.image_load('assets/wizard_idle_dark.bmp')
     # wiz.set_key_color((0, 0, 0))
@@ -41,6 +70,11 @@ def game_loop(console):
     while True:
         tcod.console_flush()
         console.clear()
+
+        rain.create_particle()
+        rain.draw()
+        lantern.create_particle()
+        lantern.draw()
         emitter.create_particle()
         emitter.draw()
 
@@ -51,10 +85,11 @@ def game_loop(console):
             clear=False
         )
 
-        wiz.blit(console, SCREEN_WIDTH - 32,  SCREEN_HEIGHT // 2, tcod.BKGND_SCREEN, 1.5, 1.5, 0)
+        wiz.blit(console, SCREEN_WIDTH - 32, SCREEN_HEIGHT // 2, tcod.BKGND_SCREEN, 1.5, 1.5, 0)
         console.print_box(3, 3, SCREEN_WIDTH - 64, SCREEN_HEIGHT - 3, bee[0:i], fg=(217, 130, 67))
         console.print(SCREEN_WIDTH - 2, 1, str(chr(30)), fg=(252, 149, 71))
         console.print(SCREEN_WIDTH - 2, SCREEN_HEIGHT - 2, str(chr(31)), fg=(252, 149, 71))
+        console.print(SCREEN_WIDTH - 8, 1, str(tcod.sys_get_fps()), fg=(230, 230, 230))
 
         glow = (glow + 0.1) % 6
         if i < len(bee):
@@ -64,6 +99,8 @@ def game_loop(console):
         # console.print(0,0,'lol hi!')
         for event in tcod.event.get():
             if event.type == "QUIT": exit()
+            if event.type == "MOUSEMOTION":
+                console.print(SCREEN_WIDTH - 40, 1, str(event.pixel))
             if event.type == "KEYDOWN":
                 print(i)
 
