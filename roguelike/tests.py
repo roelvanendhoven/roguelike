@@ -2,7 +2,7 @@ import tcod
 import tcod.console
 import tcod.event
 
-import particle
+from components import particle
 
 # Constants
 SCREEN_WIDTH = 160
