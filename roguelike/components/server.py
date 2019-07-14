@@ -29,7 +29,7 @@ class Server:
     def listen_for_connections(self):
         print('start listening for connections')
         while True:
-            sock = self.server_sock.accept()
+            sock, addr = self.server_sock.accept()
             self.on_connect(sock)
         self.server_sock.close()
 
@@ -37,20 +37,20 @@ class Server:
         listener = MessageListener(sock, self.server_sock)
         self.connected_listeners.append(listener)
         print('connect: %s', get_socket_address(sock))
-        self.send_to_all('connect: %s', get_socket_address(sock))
+        self.send_to_all('connect: %s' % get_socket_address(sock))
 
     def on_disconnect(self, listener):
         self.connected_listeners.remove(listener)
         print('disconnect: %s', get_socket_address(listener.socket))
-        self.send_to_all('disconnect: %s', get_socket_address(listener.socket))
+        self.send_to_all('disconnect: %s' % get_socket_address(listener.socket))
 
     def on_message_received(self, sock, message):
         print('%s: %s' % (get_socket_address(sock), message))
         self.send_to_all('%s: %s' % (get_socket_address(sock), message))
 
     def send_to_all(self, message):
-        for list in self.connected_listeners:
-            send(list.socket, message)
+        for l in self.connected_listeners:
+            send(l.socket, message)
 
 
 if __name__ == '__main__':
