@@ -15,7 +15,9 @@ def get_logger():
                         datefmt='%d/%m/%Y %I:%M:%S %p')
     return logging.getLogger('tcpserver')
 
+
 logger = get_logger()
+
 
 # define helper function for reading large data blobs
 def read_blob(sock, size):
@@ -42,7 +44,14 @@ def read_long(sock):
     return struct.unpack("L", data)[0]
 
 
-class _MessageListener:
+def send(conn, message):
+    jdata = json.dumps(message).encode('utf-8')
+    conn.sendall(struct.pack("L", len(jdata)))
+    conn.sendall(jdata)
+
+
+class MessageListener:
+    # TODO make public
     socket = None
 
     def __init__(self, socket, listener):
@@ -61,7 +70,7 @@ class _MessageListener:
                 self.listener.on_message_received(data)
             # Maybe actually handle the exeption, we actually just want to break the loop
             except Exception:
-                raise
+                break
 
         self.listener.on_disconnect(socket)
         self.socket.close()
@@ -88,93 +97,3 @@ class ConnectionListenerThread:
             t.setDaemon(True)
             t.start()
         s.close()
-
-
-class Server:
-    connected_clients = []
-    connection_event_listeners = []
-
-    def __init__(self):
-        s = socket.socket()  # Create a socket object
-        host = '0.0.0.0'
-        port = 7777  # Reserve a port for your service.
-
-        s.bind((host, port))  # Bind to the port
-        s.listen(5)  # Now wait for client connection.
-        self._listen(s)
-
-    def _listen(self, sock):
-        connectionListener = ConnectionListenerThread(self, sock)
-        t = threading.Thread(target=connectionListener.run)
-        # Daemonize thread so it shuts down when main thread exits
-        # do not care to clean this up, at least ubuntu frees the ports up
-        t.setDaemon(True)
-        t.start()
-
-    def add_event_listener(self, listener):
-        self.connection_event_listeners.append(listener)
-
-    def remove_event_listener(self, listener):
-        self.connection_event_listener.remove(listener)
-
-    def send_to_all(self, message):
-        for connection in self.connected_clients:
-            logger.debug('(Server): Sending %s to all' % str(message))
-            self.send(connection, message)
-
-    def send_connection_event(self, event=('', '')):
-        for listener in self.connection_event_listeners:
-            listener.on_connection_event(event)
-
-    def send(self, conn, message):
-        jdata = json.dumps(message).encode('utf-8')
-        conn.sendall(struct.pack("L", len(jdata)))
-        conn.sendall(jdata)
-
-    def on_new_client(self, conn, addr):
-        self.connected_clients.append(conn)
-        self.send_connection_event(('connect', str(addr)))
-        logger.info('New connection for %s' % str(addr))
-
-    def on_message_received(self, conn, addr, message):
-        self.send_to_all('%s: %s' % (str(addr[0]), message))
-        self.send_connection_event(('onmessage', (str(addr), message)))
-        logger.info("%s: %s" % (str(addr), message))
-
-    def on_client_disconnect(self, conn, addr):
-        self.connected_clients.remove(conn)
-        self.send_connection_event(('disconnect', str(addr)))
-        logger.info('Client %s disconnected' % str(addr))
-
-
-class ClientThread:
-
-    def __init__(self, conn, addr):
-        logger.debug('(ClientThread) created a client for %s' % str(addr))
-        self.network_event_listener = None
-        self.conn = conn
-        self.addr = addr
-
-    def listen(self):
-        self.network_event_listener.on_new_client(self.conn, self.addr)
-        while True:
-            try:
-                logger.debug('attempting to read some data')
-                datasize = read_long(self.conn)
-                if datasize == '':
-                    break
-                data = read_blob(self.conn, datasize)
-                jdata = json.loads(data)
-
-                self.network_event_listener.on_message_received(self.conn, self.addr, data)
-            # Maybe actually handle the exeption, we actually just want to break the loop
-            except Exception:
-                break
-
-        self.network_event_listener.on_client_disconnect(self.conn, self.addr)
-        self.conn.close()
-        logger.debug('(ClientThread) Connection closed: %s' % str(self.addr))
-
-
-if __name__ == '__main__':
-    Server()

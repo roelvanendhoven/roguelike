@@ -1,13 +1,16 @@
-''' Network Client module
+""" Network Client module
 
 This module is responsible for handling network events on the client sides
 
-'''
+"""
 
 import components.net_utils
 import socket
 
+from threading import Thread
+
 logger = components.net_utils.get_logger()
+
 
 class Client:
 
@@ -23,7 +26,7 @@ class Client:
         self.connection_event_listeners.append(listener)
 
     def remove_event_listener(self, listener):
-        self.connection_event_listener.remove(listener)
+        self.connection_event_listeners.remove(listener)
 
     def send_connection_event(self, event=('', '')):
         for listener in self.connection_event_listeners:
@@ -32,22 +35,19 @@ class Client:
     def disconnect(self):
         self.socket.close()
 
-    def send(self, conn, message):
-        jdata = json.dumps(message).encode('utf-8')
-        conn.sendall(struct.pack("L", len(jdata)))
-        conn.sendall(jdata)
+    def send(self, message):
+        components.net_utils.send(self.socket, message)
 
     def on_message_received(self, message):
         self.send_connection_event(('onmessage', message))
         logger.debug('client mss reveived')
 
-    def on_server_disconnect(self):
+    def on_disconnect(self):
         self.send_connection_event(('server_disconnect',))
         logger.debug('Server disconnected')
 
     def _run_message_listener(self):
-        listener = self._MessageListener(self.socket, self)
-        t = threading.Thread(target=listener.listen)
+        listener = components.net_utils.MessageListener(self.socket, self)
+        t = Thread(target=listener.listen)
         t.setDaemon(True)
         t.start()
-
