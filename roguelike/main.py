@@ -2,8 +2,7 @@ import tcod
 import tcod.console
 import tcod.event
 
-from components import particle
-import game
+from components import game
 
 # Constants
 SCREEN_WIDTH = 50
@@ -34,9 +33,9 @@ def init_tcod() -> tcod.console.Console:
 def game_loop(console):
 
     g = game.Game()
-    g.players.append(game.Player('Roel',(50,255,50)))
-    g.players.append(game.Player('Dude',(50,50,255)))
-    g.players.append(game.Player('Minge',(255,50,50)))
+    g.players.append(game.Player('Roel', (50, 255, 50)))
+    g.players.append(game.Player('Dude', (50, 50, 255)))
+    g.players.append(game.Player('Minge', (255, 50, 50)))
     g.start()
 
     while True:
