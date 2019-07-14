@@ -50,6 +50,10 @@ def send(conn, message):
     conn.sendall(jdata)
 
 
+def get_socket_address(sock):
+    return str(sock.getpeername())
+
+
 class MessageListener:
     # TODO make public
     socket = None
@@ -67,33 +71,10 @@ class MessageListener:
                 jdata = json.loads(data)
                 logger.debug('[client]: %s' % str(jdata))
 
-                self.listener.on_message_received(data)
+                self.listener.on_message_received(self.socket, data)
             # Maybe actually handle the exeption, we actually just want to break the loop
             except Exception:
                 break
 
-        self.listener.on_disconnect(socket)
+        self.listener.on_disconnect(self)
         self.socket.close()
-
-
-class ConnectionListenerThread:
-    _maxclients = 10
-
-    def __init__(self, server, socket):
-        self.socket = socket
-        self.server = server
-
-    def run(self):
-        logger.debug('(ConnectionListener) Started listening for connections')
-        s = self.socket
-        while True:
-            conn, addr = s.accept()  # Establish connection with client.
-            logger.debug('(ConnectionListener) Incoming connection from %s' % str(addr))
-            client = ClientThread(conn, addr)
-            client.network_event_listener = self.server
-            t = threading.Thread(target=client.listen)
-            # Daemonize thread so it shuts down when main thread exits
-            # do not care to clean this up, at least ubuntu frees the ports up
-            t.setDaemon(True)
-            t.start()
-        s.close()
