@@ -38,7 +38,7 @@ class Server:
         self.connected_listeners.append(listener)
         print('connect: ', get_socket_address(sock))
         self.send_to_all('connect: %s' % get_socket_address(sock))
-        start_thread(listener.listen())
+        start_thread(listener.listen)
 
     def on_disconnect(self, listener):
         self.connected_listeners.remove(listener)
