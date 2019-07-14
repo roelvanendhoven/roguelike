@@ -76,5 +76,5 @@ class MessageListener:
             except Exception:
                 break
 
-        self.listener.on_disconnect(self)
+        self.listener.on_disconnect()
         self.socket.close()

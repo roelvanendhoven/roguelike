@@ -19,7 +19,6 @@ class Client:
         self.connection_event_listeners = []
 
     def connect(self, host, port):
-        logger.debug('coonecting')
         self.socket.connect((host, port))
         self._run_message_listener()
 
@@ -39,7 +38,7 @@ class Client:
     def send(self, message):
         components.net_utils.send(self.socket, message)
 
-    def on_message_received(self, message):
+    def on_message_received(self, sock, message):
         self.send_connection_event(('onmessage', message))
         logger.debug('client mss reveived')
 
@@ -51,5 +50,4 @@ class Client:
         # logger.debug('client mss reveived')
         listener = components.net_utils.MessageListener(self.socket, self)
         t = Thread(target=listener.listen)
-        t.setDaemon(True)
         t.start()

@@ -34,22 +34,24 @@ class Server:
         self.server_sock.close()
 
     def on_connect(self, sock):
-        listener = MessageListener(sock, self.server_sock)
+        listener = MessageListener(sock, self)
         self.connected_listeners.append(listener)
-        print('connect: %s', get_socket_address(sock))
+        start_thread(listener.listen())
+        print('connect: ', get_socket_address(sock))
         self.send_to_all('connect: %s' % get_socket_address(sock))
 
     def on_disconnect(self, listener):
         self.connected_listeners.remove(listener)
-        print('disconnect: %s', get_socket_address(listener.socket))
+        print('disconnect: ', get_socket_address(listener.socket))
         self.send_to_all('disconnect: %s' % get_socket_address(listener.socket))
 
     def on_message_received(self, sock, message):
-        print('%s: %s' % (get_socket_address(sock), message))
+        print('received message: ', (get_socket_address(sock), message))
         self.send_to_all('%s: %s' % (get_socket_address(sock), message))
 
     def send_to_all(self, message):
         for l in self.connected_listeners:
+            print('send message ', message , ' to ' , get_socket_address(l.socket))
             send(l.socket, message)
 
 
