@@ -4,15 +4,18 @@ import threading
 import json
 import struct
 
+
 # TODO: Make sure to error handle the json decoding
 # TODO: Make a parent class to handle common network functionality
 
-#define a logger for testing
-logging.basicConfig(filename='server.log',level=logging.DEBUG, 
-        format='%(asctime)s %(levelname)s %(message)s', 
-        datefmt='%d/%m/%Y %I:%M:%S %p')
-logger = logging.getLogger('tcpserver')
 
+def get_logger():
+    logging.basicConfig(filename='server.log', level=logging.DEBUG,
+                        format='%(asctime)s %(levelname)s %(message)s',
+                        datefmt='%d/%m/%Y %I:%M:%S %p')
+    return logging.getLogger('tcpserver')
+
+logger = get_logger()
 
 # define helper function for reading large data blobs
 def read_blob(sock, size):
@@ -27,18 +30,44 @@ def read_blob(sock, size):
     logger.debug('exiting readblob, %s' % ret)
     return buf
 
-#define helper functions for reading header data
+
+# define helper functions for reading header data
 def read_long(sock):
     logger.debug('enterting readlong')
     size = struct.calcsize("L")
     # TODO: Make sure to throw if empty packet comes through
     data = sock.recv(size)
-    logger.debug(str(struct.unpack("L",data)))
+    logger.debug(str(struct.unpack("L", data)))
     # returning first element because unpack returns a tuple
     return struct.unpack("L", data)[0]
 
-class ConnectionListenerThread:
 
+class _MessageListener:
+    socket = None
+
+    def __init__(self, socket, listener):
+        self.listener = listener
+        self.socket = socket
+
+    def listen(self):
+        while True:
+            try:
+                logger.debug('(client): message incoming')
+                datasize = read_long(self.socket)
+                data = read_blob(self.socket, datasize)
+                jdata = json.loads(data)
+                logger.debug('[client]: %s' % str(jdata))
+
+                self.listener.on_message_received(data)
+            # Maybe actually handle the exeption, we actually just want to break the loop
+            except Exception:
+                raise
+
+        self.listener.on_disconnect(socket)
+        self.socket.close()
+
+
+class ConnectionListenerThread:
     _maxclients = 10
 
     def __init__(self, server, socket):
@@ -49,7 +78,7 @@ class ConnectionListenerThread:
         logger.debug('(ConnectionListener) Started listening for connections')
         s = self.socket
         while True:
-            conn, addr = s.accept()     # Establish connection with client.
+            conn, addr = s.accept()  # Establish connection with client.
             logger.debug('(ConnectionListener) Incoming connection from %s' % str(addr))
             client = ClientThread(conn, addr)
             client.network_event_listener = self.server
@@ -60,41 +89,40 @@ class ConnectionListenerThread:
             t.start()
         s.close()
 
-class Server:
 
+class Server:
     connected_clients = []
     connection_event_listeners = []
-    
-    def __init__(self):
-        s = socket.socket()         # Create a socket object
-        host = '0.0.0.0' 
-        port = 7777                # Reserve a port for your service.
 
-        s.bind((host, port))        # Bind to the port
-        s.listen(5)                 # Now wait for client connection.
+    def __init__(self):
+        s = socket.socket()  # Create a socket object
+        host = '0.0.0.0'
+        port = 7777  # Reserve a port for your service.
+
+        s.bind((host, port))  # Bind to the port
+        s.listen(5)  # Now wait for client connection.
         self._listen(s)
 
     def _listen(self, sock):
-            connectionListener = ConnectionListenerThread(self, sock)
-            t = threading.Thread(target=connectionListener.run)
-            # Daemonize thread so it shuts down when main thread exits
-            # do not care to clean this up, at least ubuntu frees the ports up
-            t.setDaemon(True)
-            t.start()
+        connectionListener = ConnectionListenerThread(self, sock)
+        t = threading.Thread(target=connectionListener.run)
+        # Daemonize thread so it shuts down when main thread exits
+        # do not care to clean this up, at least ubuntu frees the ports up
+        t.setDaemon(True)
+        t.start()
 
     def add_event_listener(self, listener):
-            self.connection_event_listeners.append(listener)
+        self.connection_event_listeners.append(listener)
 
     def remove_event_listener(self, listener):
-            self.connection_event_listener.remove(listener)
+        self.connection_event_listener.remove(listener)
 
     def send_to_all(self, message):
         for connection in self.connected_clients:
             logger.debug('(Server): Sending %s to all' % str(message))
             self.send(connection, message)
 
-
-    def send_connection_event(self, event = ('','')):
+    def send_connection_event(self, event=('', '')):
         for listener in self.connection_event_listeners:
             listener.on_connection_event(event)
 
@@ -110,16 +138,17 @@ class Server:
 
     def on_message_received(self, conn, addr, message):
         self.send_to_all('%s: %s' % (str(addr[0]), message))
-        self.send_connection_event(('onmessage', (str(addr),message)))
+        self.send_connection_event(('onmessage', (str(addr), message)))
         logger.info("%s: %s" % (str(addr), message))
 
     def on_client_disconnect(self, conn, addr):
         self.connected_clients.remove(conn)
         self.send_connection_event(('disconnect', str(addr)))
-        logger.info('Client %s disconnected'% str(addr))
+        logger.info('Client %s disconnected' % str(addr))
+
 
 class ClientThread:
-    
+
     def __init__(self, conn, addr):
         logger.debug('(ClientThread) created a client for %s' % str(addr))
         self.network_event_listener = None
@@ -136,7 +165,7 @@ class ClientThread:
                     break
                 data = read_blob(self.conn, datasize)
                 jdata = json.loads(data)
-                
+
                 self.network_event_listener.on_message_received(self.conn, self.addr, data)
             # Maybe actually handle the exeption, we actually just want to break the loop
             except Exception:
@@ -146,71 +175,6 @@ class ClientThread:
         self.conn.close()
         logger.debug('(ClientThread) Connection closed: %s' % str(self.addr))
 
-class Client:
-
-    def __init__(self):
-        self.socket = socket.socket()
-        self.connection_event_listeners = []
-    
-    def connect(self, host, port):
-        self.socket.connect((host,port))
-        self._run_message_listener()
-
-    def add_event_listener(self, listener):
-            self.connection_event_listeners.append(listener)
-
-    def remove_event_listener(self, listener):
-            self.connection_event_listener.remove(listener)
-
-    def send_connection_event(self, event = ('','')):
-        for listener in self.connection_event_listeners:
-            listener.on_connection_event(event)
-
-    def disconnect(self):
-        self.socket.close()
-
-    def send(self, conn, message):
-        jdata = json.dumps(message).encode('utf-8')
-        conn.sendall(struct.pack("L", len(jdata)))
-        conn.sendall(jdata)
-
-    def on_message_received(self, message):
-        self.send_connection_event(('onmessage', message))
-        logger.debug('client mss reveived')
-
-    def on_server_disconnect(self):
-        self.send_connection_event(('server_disconnect',))
-        logger.debug('Server disconnected')
-
-    def _run_message_listener(self):
-        listener = self._MessageListener(self.socket, self)
-        t = threading.Thread(target=listener.listen)
-        t.setDaemon(True)
-        t.start() 
-
-    class _MessageListener:
-        socket = None
-
-        def __init__(self, socket, client):
-            self.client = client
-            self.socket = socket
-
-        def listen(self):
-            while True:
-                try:
-                    logger.debug('(client): message incoming')
-                    datasize = read_long(self.socket)
-                    data = read_blob(self.socket, datasize)
-                    jdata = json.loads(data)
-                    logger.debug('[client]: %s' % str(jdata))
-
-                    self.client.on_message_received(data)
-                # Maybe actually handle the exeption, we actually just want to break the loop
-                except Exception:
-                    raise
-
-            self.client.on_server_disconnect()
-            self.socket.close()
 
 if __name__ == '__main__':
     Server()
