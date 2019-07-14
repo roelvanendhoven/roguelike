@@ -74,26 +74,3 @@ class MessageListener:
 
         self.listener.on_disconnect(socket)
         self.socket.close()
-
-
-class ConnectionListenerThread:
-    _maxclients = 10
-
-    def __init__(self, server, socket):
-        self.socket = socket
-        self.server = server
-
-    def run(self):
-        logger.debug('(ConnectionListener) Started listening for connections')
-        s = self.socket
-        while True:
-            conn, addr = s.accept()  # Establish connection with client.
-            logger.debug('(ConnectionListener) Incoming connection from %s' % str(addr))
-            client = ClientThread(conn, addr)
-            client.network_event_listener = self.server
-            t = threading.Thread(target=client.listen)
-            # Daemonize thread so it shuts down when main thread exits
-            # do not care to clean this up, at least ubuntu frees the ports up
-            t.setDaemon(True)
-            t.start()
-        s.close()

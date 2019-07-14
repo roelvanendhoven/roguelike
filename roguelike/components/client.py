@@ -19,6 +19,7 @@ class Client:
         self.connection_event_listeners = []
 
     def connect(self, host, port):
+        logger.debug('coonecting')
         self.socket.connect((host, port))
         self._run_message_listener()
 
@@ -47,6 +48,7 @@ class Client:
         logger.debug('Server disconnected')
 
     def _run_message_listener(self):
+        # logger.debug('client mss reveived')
         listener = components.net_utils.MessageListener(self.socket, self)
         t = Thread(target=listener.listen)
         t.setDaemon(True)
