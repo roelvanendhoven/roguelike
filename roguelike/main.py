@@ -88,6 +88,6 @@ def main():
 
 if __name__ == "__main__":
     c = components.client.Client()
-    c.connect('86.83.187.168', 7777)
+    c.connect('127.0.0.1', 7777)
     c.send({'say': 'Hello, world!'})
     #main()

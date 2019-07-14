@@ -40,6 +40,7 @@ class Client:
 
     def on_message_received(self, sock, message):
         self.send_connection_event(('onmessage', message))
+        print(message)
         logger.debug('client mss reveived')
 
     def on_disconnect(self):
