@@ -43,7 +43,7 @@ class Client:
         print(message)
         logger.debug('client mss reveived')
 
-    def on_disconnect(self):
+    def on_disconnect(self, _):
         self.send_connection_event(('server_disconnect',))
         logger.debug('Server disconnected')
 
