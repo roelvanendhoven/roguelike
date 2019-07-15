@@ -3,7 +3,7 @@ import tcod.console
 import tcod.event
 
 from components import game
-from components.ui import Input, InputBox, Button, Dialog, Screen
+from components.ui import Input, Button, create_menu
 
 import components.client
 
@@ -33,25 +33,28 @@ def init_tcod() -> tcod.console.Console:
     return root_console
 
 
-class ConnectMenu(Dialog):
-    ip = Input(1, 2, 24, ' Server IP:', '127.0.0.1')
-    port = Input(1, 4, 24, ' Port:     ', '7777')
-    ok_button = Button(8, 6, 'Connect')
-    ip_box = InputBox(28, 8, title='Connect to Server', contents=[ip, port, ok_button])
-
-
 def game_loop(console):
-    screen = Screen(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, console, title='Logue Regacy')
 
+    menu = create_menu(console, [
+        Button('Create Server'),
+        Button('Connect'),
+        Button('Credits'),
+        Button('Quit')
+    ], title='MENU')
     while True:
 
-        screen.draw()
+        tcod.console_flush()
+        console.clear()
+
+        console.draw_frame(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, clear=False, title='Logue Regacy')
+
+        menu.draw(console)
 
         for event in tcod.event.get():
             if event.type == "QUIT":
                 exit()
             if event.type == "KEYDOWN" or event.type == "TEXTINPUT":
-                screen.dispatch(event)
+                menu.dispatch(event)
 
 
 def main():

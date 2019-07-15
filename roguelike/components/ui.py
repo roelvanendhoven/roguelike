@@ -5,75 +5,41 @@ from tcod.event import EventDispatch, KeyDown, TextInput
 from typing import List, Union
 
 
+def calculate_middle(console, dimensions: tuple) -> tuple:
+    w, h = dimensions
+    new_w = (console.width // 2) - w // 2
+    new_h = (console.height // 2) - h // 2
+    return new_w, new_h
+
+
+def create_menu(console, contents, title=''):
+    menu = Menu(30, 15, contents=contents, title=title)
+    x, y = calculate_middle(console, (menu.width, menu.height))
+    menu.x = x
+    menu.y = y
+    for i, element in enumerate(contents, 1):
+        element.x = 2
+        element.y = (i * 2)
+        element.width = menu.width - 3
+    menu.hidden = False
+    return menu
+
+
 class Component:
-
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, w, h):
         self.x = x
         self.y = y
-        self.width = width
-        self.height = height
-
-    def _draw(self, console: Console):
-        pass
+        self.w = w
+        self.h = h
 
 
-class Container(Component, EventDispatch):
-    contents: List[Component] = []
-    focused_component: Union[EventDispatch, Component] = None
+class Button(EventDispatch):
 
-    def _draw(self, console: Console) -> None:
-        for component in self.contents:
-            component._draw(console)
-
-    def ev_keydown(self, event: KeyDown) -> None:
-        if self.focused_component is not None:
-            self.focused_component.dispatch(event)
-
-    def ev_textinput(self, event: TextInput) -> None:
-        if self.focused_component is not None:
-            self.focused_component.dispatch(event)
-
-    def add_widget(self, component: Component):
-        self.contents.append(component)
-        if self.focused_component is None:
-            self.focused_component = component
-
-    def remove_widget(self, component: Component):
-        if component in self.contents:
-            if component == self.focused_component:
-                self.focused_component = None
-            self.contents.remove(component)
-
-class Dialog(Container):
-
-
-
-class Screen(Container):
-
-    def __init__(self, x, y, width, height, console: Console, title=''):
-        super().__init__(x, y, width, height)
-        self.console = console
-        self.title = title
-
-    def draw(self) -> None:
-        tcod.console_flush()
-        self.console.clear()
-        super()._draw(self.console)
-        self.console.draw_frame(self.x, self.y, self.width, self.height, clear=False, title=self.title)
-
-    def show_dialog(self,entries):
-        dialog = Dialog()
-
-
-
-
-class Button(Component, EventDispatch):
-
-    def __init__(self, x, y, text='Ok', col=(255, 255, 255)):
-        self.x = x
-        self.y = y
+    def __init__(self, text='Ok', col=(255, 255, 255)):
         self.text = text
         self.col = col
+        self.x = 0
+        self.y = 0
 
     def draw(self, console: Console):
         console.print(self.x, self.y, '< ' + self.text + ' >', fg=self.col)
@@ -83,18 +49,18 @@ class Button(Component, EventDispatch):
             pass
 
 
+class Input(EventDispatch):
 
-
-
-class Input(Component, EventDispatch):
-
-    def __init__(self, x: int, y: int, width: int = 0, label: str = None, default: str = None, col=(255, 255, 255)):
+    def __init__(self, label: str = None, default: str = None, col=(255, 255, 255)):
         self.col = col
-        self.x = x
-        self.y = y
-        self.width = width
+        self.x = 0
+        self.y = 0
+        self.width = 0
         self.label = label
         self.text = default
+
+    def get_max_input_length(self):
+        return self.width - len(self.label) - 2
 
     def draw(self, console: Console, col=(255, 255, 255)):
         console.print(self.x, self.y, self.label, fg=col)
@@ -106,10 +72,11 @@ class Input(Component, EventDispatch):
             self.text = self.text[0:-1]
 
     def ev_textinput(self, event: TextInput) -> None:
-        self.text += event.text
+        if self.get_max_input_length() < len(self.text):
+            self.text += event.text
 
 
-class InputBox(EventDispatch):
+class Menu(EventDispatch):
 
     def __init__(self, width, height, selected_index=0, contents=[], title=''):
         self.width = width
@@ -118,16 +85,20 @@ class InputBox(EventDispatch):
         self.selected_index = selected_index
         self.contents = contents
         self.title = title
+        self.x = 0
+        self.y = 0
+        self.hidden = True
 
-    def draw(self, console, x, y):
-        self.console.draw_frame(0, 0, self.width, self.height, title=self.title, )
-        for index, elem in enumerate(self.contents, 0):
-            if index == self.selected_index:
-                elem.draw(self.console, col=(245, 218, 66))
-            else:
+    def draw(self, console):
+        if not self.hidden:
+            self.console.draw_frame(0, 0, self.width, self.height, title=self.title, )
+            for index, elem in enumerate(self.contents, 0):
+                if index == self.selected_index:
+                    elem.col = (245, 218, 66)
+                else:
+                    elem.col = (255, 255, 255)
                 elem.draw(self.console)
-
-        self.console.blit(console, x, y)
+            self.console.blit(console, self.x, self.y)
 
     def ev_textinput(self, event: TextInput) -> None:
         self.contents[self.selected_index].dispatch(event)
