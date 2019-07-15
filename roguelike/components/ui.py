@@ -44,9 +44,18 @@ def create_menu(console, contents, title='', width=30, height=15):
     return menu
 
 
+class UIEvent:
+
+    def __init__(self, type: str, value: dict = None):
+        if value is None:
+            self.value = dict()
+        self.type = type
+        self.value = value
+
+
 class Button(EventDispatch):
 
-    def __init__(self, text='Ok', event='', col=(255, 255, 255)):
+    def __init__(self, text='Ok', event: UIEvent = None, col=(255, 255, 255)):
         self.text = text
         self.col = col
         self.x = 0
@@ -101,6 +110,7 @@ class Menu(EventDispatch):
         self.x = 0
         self.y = 0
         self.hidden = True
+        self.input_values = {}
 
     def draw(self, console):
         if not self.hidden:

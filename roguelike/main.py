@@ -3,7 +3,7 @@ import tcod.console
 import tcod.event
 
 from components import game
-from components.ui import Input, Button, create_menu, init_queue, get_ui_event
+from components.ui import Input, Button, create_menu, init_queue, get_ui_event, UIEvent
 
 import components.client
 
@@ -35,17 +35,16 @@ def init_tcod() -> tcod.console.Console:
 
 
 def game_loop(console):
-
     menu_stack = []
 
     menu = create_menu(console, [
-        Button('Create Server'),
+        Button('Create Server', UIEvent('MENU_CREATE_SERVER')),
         Input('Name:'),
         Input('Game:'),
         Input('Lame:'),
-        Button('Connect', 'MENU_CONNECT'),
+        Button('Connect', UIEvent('MENU_CONNECT')),
         Button('Credits'),
-        Button('Quit', 'QUIT')
+        Button('Quit', UIEvent('QUIT'))
     ], title='MENU')
 
     menu_stack.append(menu)
@@ -67,18 +66,22 @@ def game_loop(console):
 
         event = get_ui_event()
         if event:
-            if event == 'QUIT':
+            if event.type == 'QUIT':
                 raise SystemExit()
-            elif event == 'CANCEL':
+            elif event.type == 'CANCEL':
                 menu_stack.pop()
-            elif event == 'MENU_CONNECT':
+            elif event.type == 'MENU_CONNECT':
+                ip = Input('IP:  ', '127.0.0.1')
+                port = Input('Port:', '7777')
                 menu_stack.append(create_menu(console, [
-                    Input('IP:  ', '127.0.0.1'),
-                    Input('Port:', '7777'),
-                    Button('Connect','CONNECT'),
-                    Button('Cancel','CANCEL')
+                    ip,
+                    port,
+                    Button('Connect', UIEvent('CONNECT', {'ip': ip, 'port': port})),
+                    Button('Cancel', UIEvent('CANCEL'))
                 ], title='Connect to Server'))
-
+            elif event.type == "CONNECT":
+                # TODO create better way to handle event attributes
+                print(event.value['ip'].text, event.value['port'].text)
             print(event)
 
 
