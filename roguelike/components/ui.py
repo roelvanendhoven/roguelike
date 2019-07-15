@@ -1,8 +1,24 @@
 import tcod
 from tcod.console import Console
 from tcod.event import EventDispatch, KeyDown, TextInput
+from queue import Queue, Empty
 
-from typing import List, Union
+queue = None
+
+
+def init_queue():
+    global queue
+    queue = Queue()
+    return queue
+
+
+def get_ui_event():
+    try:
+        global queue
+        event = queue.get(False)
+        return event
+    except Empty:
+        pass
 
 
 def calculate_middle(console, dimensions: tuple) -> tuple:
@@ -12,9 +28,12 @@ def calculate_middle(console, dimensions: tuple) -> tuple:
     return new_w, new_h
 
 
-def create_menu(console, contents, title=''):
-    menu = Menu(30, 15, contents=contents, title=title)
-    x, y = calculate_middle(console, (menu.width, menu.height))
+def create_menu(console, contents, title='', width=30, height=15):
+    if len(contents) * 2 > height - 3:
+        print('true')
+        height = (len(contents) * 2) + 3
+    x, y = calculate_middle(console, (width, height))
+    menu = Menu(width, height, contents=contents, title=title)
     menu.x = x
     menu.y = y
     for i, element in enumerate(contents, 1):
@@ -25,33 +44,27 @@ def create_menu(console, contents, title=''):
     return menu
 
 
-class Component:
-    def __init__(self, x, y, w, h):
-        self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
-
-
 class Button(EventDispatch):
 
-    def __init__(self, text='Ok', col=(255, 255, 255)):
+    def __init__(self, text='Ok', event='', col=(255, 255, 255)):
         self.text = text
         self.col = col
         self.x = 0
         self.y = 0
+        self.event = event
 
     def draw(self, console: Console):
         console.print(self.x, self.y, '< ' + self.text + ' >', fg=self.col)
 
     def ev_keydown(self, event: KeyDown) -> None:
-        if event.sym == tcod.event.K_KP_ENTER:
+        if event.sym == tcod.event.K_RETURN:
+            queue.put(self.event)
             pass
 
 
 class Input(EventDispatch):
 
-    def __init__(self, label: str = None, default: str = None, col=(255, 255, 255)):
+    def __init__(self, label: str = '', default: str = '', col=(255, 255, 255)):
         self.col = col
         self.x = 0
         self.y = 0
@@ -60,19 +73,19 @@ class Input(EventDispatch):
         self.text = default
 
     def get_max_input_length(self):
-        return self.width - len(self.label) - 2
+        return self.width - len(self.label) - 3
 
-    def draw(self, console: Console, col=(255, 255, 255)):
-        console.print(self.x, self.y, self.label, fg=col)
-        console.print(self.x + len(self.label) + 2, self.y, ' ' * (self.width - len(self.label) - 2), bg=(20, 20, 20))
-        console.print(self.x + len(self.label) + 2, self.y, self.text, fg=col, bg=(20, 20, 20))
+    def draw(self, console: Console):
+        console.print(self.x, self.y, self.label, fg=self.col)
+        console.print(self.x + len(self.label) + 2, self.y, ' ' * (self.width - len(self.label) - 3), bg=(20, 20, 20))
+        console.print(self.x + len(self.label) + 2, self.y, self.text, fg=self.col, bg=(20, 20, 20))
 
     def ev_keydown(self, event: KeyDown) -> None:
         if event.sym in (tcod.event.K_BACKSPACE, 8):
             self.text = self.text[0:-1]
 
     def ev_textinput(self, event: TextInput) -> None:
-        if self.get_max_input_length() < len(self.text):
+        if self.get_max_input_length() > len(self.text):
             self.text += event.text
 
 
