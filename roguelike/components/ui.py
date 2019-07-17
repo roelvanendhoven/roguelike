@@ -3,18 +3,18 @@ from tcod.console import Console
 from tcod.event import EventDispatch, KeyDown, TextInput
 from queue import Queue, Empty
 
-queue = None
 
-
-def init_queue():
-    global queue
+class QueueFactory:
     queue = Queue()
-    return queue
+
+    @staticmethod
+    def get_queue():
+        return QueueFactory.queue
 
 
 def get_ui_event():
     try:
-        global queue
+        queue = QueueFactory.get_queue()
         event = queue.get(False)
         return event
     except Empty:
@@ -53,13 +53,25 @@ class UIEvent:
         self.value = value
 
 
-class Button(EventDispatch):
+class MenuItem:
 
-    def __init__(self, text='Ok', event: UIEvent = None, col=(255, 255, 255)):
+    def __init__(self, x=0, y=0):
+        self.y = x
+        self.x = y
+
+    def set_x(self, x):
+        self.x = x
+
+    def set_y(self, y):
+        self.y = y
+
+
+class Button(EventDispatch, MenuItem):
+
+    def __init__(self, text='Ok', event: UIEvent = None, x=0, y=0, col=(255, 255, 255)):
+        super().__init__(x, y)
         self.text = text
         self.col = col
-        self.x = 0
-        self.y = 0
         self.event = event
 
     def draw(self, console: Console):
@@ -67,11 +79,11 @@ class Button(EventDispatch):
 
     def ev_keydown(self, event: KeyDown) -> None:
         if event.sym == tcod.event.K_RETURN:
-            queue.put(self.event)
+            QueueFactory.get_queue().put(self.event)
             pass
 
 
-class Input(EventDispatch):
+class Input(EventDispatch, MenuItem):
 
     def __init__(self, label: str = '', default: str = '', col=(255, 255, 255)):
         self.col = col

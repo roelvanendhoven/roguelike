@@ -3,7 +3,7 @@ import tcod.console
 import tcod.event
 
 from components import game
-from components.ui import Input, Button, create_menu, init_queue, get_ui_event, UIEvent
+from components.ui import Input, Button, create_menu, QueueFactory, get_ui_event, UIEvent
 
 import components.client
 
@@ -19,7 +19,6 @@ FONT_OPTIONS_MASK = tcod.FONT_TYPE_GREYSCALE | tcod.FONT_LAYOUT_TCOD
 
 def init_tcod() -> tcod.console.Console:
     tcod.console_set_custom_font(FONT, FONT_OPTIONS_MASK)
-    init_queue()
 
     root_console = tcod.console_init_root(
         SCREEN_WIDTH,
@@ -88,11 +87,7 @@ def game_loop(console):
 def main():
     root_console = init_tcod()
     game_loop(root_console)
-    print("Rogue like Jagger")
 
 
 if __name__ == "__main__":
-    # c = components.client.Client()
-    # c.connect('127.0.0.1', 7777)
-    # c.send({'say': 'Hello, world!'})
     main()
