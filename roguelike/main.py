@@ -3,7 +3,7 @@ import tcod.console
 import tcod.event
 
 from components import game
-from components.ui import Input, Button, create_menu, QueueFactory, get_ui_event, UIEvent
+from components.ui import Input, Button, Menu, get_ui_event, UIEvent
 
 import components.client
 
@@ -36,7 +36,7 @@ def init_tcod() -> tcod.console.Console:
 def game_loop(console):
     menu_stack = []
 
-    menu = create_menu(console, [
+    menu = Menu.create(console, [
         Button('Create Server', UIEvent('MENU_CREATE_SERVER')),
         Input('Name:'),
         Input('Game:'),
@@ -55,7 +55,7 @@ def game_loop(console):
 
         console.draw_frame(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, clear=False, title='Logue Regacy')
 
-        menu_stack[-1].draw(console)
+        menu_stack[-1].draw()
 
         for event in tcod.event.get():
             if event.type == "QUIT":
@@ -72,7 +72,7 @@ def game_loop(console):
             elif event.type == 'MENU_CONNECT':
                 ip = Input('IP:  ', '127.0.0.1')
                 port = Input('Port:', '7777')
-                menu_stack.append(create_menu(console, [
+                menu_stack.append(Menu.create(console, [
                     ip,
                     port,
                     Button('Connect', UIEvent('CONNECT', {'ip': ip, 'port': port})),
