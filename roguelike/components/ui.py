@@ -59,7 +59,7 @@ class Button(EventDispatch, MenuItem):
         self.event = event
 
     def draw(self, console: Console):
-        console.print(self.x, self.y, '< ' + self.text + ' >', fg=self.col)
+        console.print(self.x, self.y, '' + self.text + '', fg=self.col)
 
     def ev_keydown(self, event: KeyDown) -> None:
         if event.sym == tcod.event.K_RETURN:
