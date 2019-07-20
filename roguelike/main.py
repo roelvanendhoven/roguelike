@@ -26,14 +26,14 @@ class Game:
     def _run_main_loop(self):
         while True:
             console = self.root_console
-            menu_stack = self.menu_stack
 
             tcod.console_flush()
             console.clear()
 
             console.draw_frame(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, clear=False, title='Logue Regacy')
 
-            menu_stack[-1].draw()
+            if self.main_menu.is_open():
+                self.main_menu.menu_stack[-1].draw()
 
             for event in tcod.event.get():
                 if event.type == "QUIT":
@@ -67,16 +67,31 @@ class Game:
 
 class MainMenu:
     menu_stack = []
+    _menu_open = False
+
+    create_server_button = Button('Create Server', UIEvent('MENU_CREATE_SERVER'))
+    join_server_button = Button('Join Server', UIEvent('MENU_CONNECT'))
+    options_button = Button('Options')
+    credits_button = Button('Credits'),
+    quit_button = Button('Quit', UIEvent('QUIT'))
+
+    def open(self):
+        self._menu_open = True
+
+    def close(self):
+        self._menu_open = False
+
+    def is_open(self):
+        return self._menu_open
 
     def __init__(self, game: Game):
+
         self.main_menu = Menu.create(game.root_console, [
-            Button('Create Server', UIEvent('MENU_CREATE_SERVER')),
-            Input('Name:'),
-            Input('Game:'),
-            Input('Lame:'),
-            Button('Connect', UIEvent('MENU_CONNECT')),
-            Button('Credits'),
-            Button('Quit', UIEvent('QUIT'))
+            self.create_server_button,
+            self.join_server_button,
+            self.options_button,
+            self.credits_button,
+            self.quit_button
         ], title='MENU')
 
         self.menu_stack.append(self.main_menu)
