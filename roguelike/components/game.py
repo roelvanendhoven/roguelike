@@ -40,7 +40,7 @@ class Player:
         self.entity = Entity(5, 5, '@', col)
 
 
-class Game:
+class GameState:
     turncount: int = 0
     players: List[Player] = []
     current_player: Player = None

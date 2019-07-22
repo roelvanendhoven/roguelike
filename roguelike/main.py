@@ -17,7 +17,6 @@ FONT_OPTIONS_MASK = tcod.FONT_TYPE_GREYSCALE | tcod.FONT_LAYOUT_TCOD
 
 
 class Game:
-    menu_stack = []
 
     def __init__(self, root_console: tcod.console.Console):
         self.root_console = root_console
@@ -50,12 +49,7 @@ class Game:
                 elif event.type == 'MENU_CONNECT':
                     ip = Input('IP:  ', '127.0.0.1')
                     port = Input('Port:', '7777')
-                    menu_stack.append(Menu.create(console, [
-                        ip,
-                        port,
-                        Button('Connect', UIEvent('CONNECT', {'ip': ip, 'port': port})),
-                        Button('Cancel', UIEvent('CANCEL'))
-                    ], title='Connect to Server'))
+                    menu_stack.append()
                 elif event.type == "CONNECT":
                     # TODO create better way to handle event attributes
                     print(event.value['ip'].text, event.value['port'].text)
@@ -75,6 +69,10 @@ class MainMenu:
     credits_button = Button('Credits'),
     quit_button = Button('Quit', UIEvent('QUIT'))
 
+    connect_button =
+    ip_input = Input('IP:  ', '127.0.0.1')
+    port_input = Input('Port:', '7777')
+
     def open(self):
         self._menu_open = True
 
@@ -85,6 +83,7 @@ class MainMenu:
         return self._menu_open
 
     def __init__(self, game: Game):
+        self._game = game
 
         self.main_menu = Menu.create(game.root_console, [
             self.create_server_button,
@@ -96,6 +95,13 @@ class MainMenu:
 
         self.menu_stack.append(self.main_menu)
 
+    def open_connect_menu(self):
+        connect_menu = Menu.create(self._game.root_console, [
+            self.ip_input,
+            self.port_input,
+            Button('Connect', UIEvent('CONNECT', {'ip': ip, 'port': port})),
+            Button('Cancel', UIEvent('CANCEL'))
+        ], title='Connect to Server')
 
 def init_tcod() -> tcod.console.Console:
     tcod.console_set_custom_font(FONT, FONT_OPTIONS_MASK)
