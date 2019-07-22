@@ -1,6 +1,8 @@
 import socket
 import threading
-from components.net_utils import MessageListener, send, get_socket_address
+import constants
+from components.net_utils import MessageListener, get_socket_address
+from managers.sessions import *
 
 """Server module containing server logic
 """
@@ -17,6 +19,7 @@ class Server:
 
     def __init__(self):
         print('start server')
+        self.session_manager = SessionManager()
         self.server_sock = s = socket.socket()  # Create a socket object
         host = '0.0.0.0'
         port = 7777  # Reserve a port for your service.
@@ -41,17 +44,25 @@ class Server:
         start_thread(listener.listen)
 
     def on_disconnect(self, listener):
+        sessions = self.session_manager.get_sessions_for_player(listener.socket)
+        if sessions is not None:
+            for s in sessions:
+                s.leave(listener.socket)
+
         self.connected_listeners.remove(listener)
-        print('disconnect: ', get_socket_address(listener.socket))
         self.send_to_all('disconnect: %s' % get_socket_address(listener.socket))
 
-    def on_message_received(self, sock, message):
-        print('received message: ', (get_socket_address(sock), message))
-        self.send_to_all('%s: %s' % (get_socket_address(sock), message))
+    def on_message_received(self, sock, event):
+        if event[0] == constants.GLOBAL_CHAT:
+            self.send_to_all((constants.GLOBAL_CHAT, event[1]))
+        elif event[0] == constants.LOBBIES:
+            self.session_manager.on_lobby_event(sock, event[1])
+        elif event[0] == constants.PLAYER_INTENT:
+            self.session_manager.on_player_intent(sock, event[1])
 
     def send_to_all(self, message):
         for l in self.connected_listeners:
-            print('send message ', message , ' to ' , get_socket_address(l.socket))
+            print('send message ', message, ' to ', get_socket_address(l.socket))
             send(l.socket, message)
 
 
