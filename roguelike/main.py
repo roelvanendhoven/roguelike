@@ -82,7 +82,8 @@ class ChatView:
         self.messages.append(message + '\n')
 
     def on_connection_event(self, event):
-        self.add_message(event[1]['message'])
+        if event[0] == constants.GLOBAL_CHAT:
+            self.add_message(event[1]['player'] + ': ' + event[1]['message'])
 
     def draw(self, root_console):
         self.console.draw_frame(0, 0, self.console.width, self.console.height)
