@@ -16,12 +16,14 @@ logger = components.net_utils.get_logger()
 class Client:
 
     def __init__(self):
+        self.connected = False
         self.socket = socket.socket()
         self.connection_event_listeners = []
 
     def connect(self, host, port):
         # TODO error handling
         self.socket.connect((host, port))
+        self.connected = True
         self._run_message_listener()
 
     def add_event_listener(self, listener):
