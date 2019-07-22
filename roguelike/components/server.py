@@ -14,8 +14,18 @@ def start_thread(func):
     t.start()
 
 
+class Player:
+    name = "???"
+
+    def __init__(self, listener):
+        self.listener = listener
+
+    def set_name(self, name):
+        self.name = name
+
+
 class Server:
-    connected_listeners = []
+    players = []
 
     def __init__(self):
         print('start server')
@@ -38,8 +48,7 @@ class Server:
 
     def on_connect(self, sock):
         listener = MessageListener(sock, self)
-        self.connected_listeners.append(listener)
-        self.send_to_all(get_socket_address(sock) + " connected")
+        self.players.append(Player(listener))
         start_thread(listener.listen)
 
     def on_disconnect(self, listener):
@@ -48,21 +57,34 @@ class Server:
             for s in sessions:
                 s.leave(listener.socket)
 
-        self.connected_listeners.remove(listener)
-        self.send_to_all(get_socket_address(listener.socket) + " disconnected")
+        player = self.get_player_for_socket(listener.socket)
+        self.players.remove(player)
+        self.send_to_all(player.name + " disconnected")
 
     def on_message_received(self, sock, event):
-        print(event)
+        player = self.get_player_for_socket(sock)
+        if player is None:
+            print("player not found")
+
         if event[0] == constants.GLOBAL_CHAT:
-            self.send_to_all(event[1]['message'])
+            self.send_to_all(str(event[1]['player']) + ": " + str(event[1]['message']))
+        elif event[0] == constants.PLAYER_CONNECT:
+            player.set_name(event[1]['name'])
+            self.send_to_all(player.name + " connected")
         elif event[0] == constants.LOBBIES:
-            self.session_manager.on_lobby_event(sock, event[1])
+            self.session_manager.on_lobby_event(player, event[1])
         elif event[0] == constants.PLAYER_INTENT:
-            self.session_manager.on_player_intent(sock, event[1])
+            self.session_manager.on_player_intent(player, event[1])
+
+    def get_player_for_socket(self, sock) -> Player:
+        for p in self.players:
+            if p.listener.socket == sock:
+                return p
+        return None
 
     def send_to_all(self, message):
-        for l in self.connected_listeners:
-            send(l.socket, (constants.GLOBAL_CHAT, {'message': message}))
+        for p in self.players:
+            send(p.listener.socket, (constants.GLOBAL_CHAT, {'message': message}))
 
 
 if __name__ == '__main__':
