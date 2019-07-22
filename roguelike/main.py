@@ -23,7 +23,7 @@ class Game:
         self.main_menu = MainMenu(self)
         self.chat_view = ChatView(self)
         self.main_menu.open()
-        self.game_client: client.Client = None
+        self.game_client: client.Client = client.Client()
 
     def _run_main_loop(self):
         while True:
@@ -34,7 +34,7 @@ class Game:
 
             console.draw_frame(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, clear=False, title='Logue Regacy')
 
-            if self.game_client:
+            if self.game_client.connected:
                 self.chat_view.draw(console)
 
             if self.main_menu.is_open():
@@ -42,6 +42,8 @@ class Game:
 
             for event in tcod.event.get():
                 if event.type == "QUIT":
+                    if self.game_client.connected:
+                        self.game_client.disconnect()
                     exit()
                 if event.type == "KEYDOWN" or event.type == "TEXTINPUT":
                     if self.main_menu.is_open():
@@ -53,9 +55,9 @@ class Game:
         self._run_main_loop()
 
     def connect(self, ip, port):
-        self.game_client = client.Client()
         self.game_client.add_event_listener(self.chat_view)
         self.game_client.connect(ip, port)
+        self.game_client.send((constants.PLAYER_CONNECT, {'name': self.main_menu.player_name_input.text}))
         self.main_menu.close()
 
 
@@ -74,7 +76,6 @@ class ChatView:
     def send_message(self):
         text = self.message_input.text
         self.message_input.text = ''
-        self.add_message(text)
         self.game.game_client.send((constants.GLOBAL_CHAT, {'message': text}))
 
     def add_message(self, message):
@@ -106,6 +107,8 @@ class MainMenu:
     ip_input = Input('IP:  ', '86.83.187.168')
     port_input = Input('Port:', '7777')
 
+    player_name_input = Input('Player name:', 'Koldor')
+
     def open(self):
         self._menu_open = True
 
@@ -119,6 +122,7 @@ class MainMenu:
         self._game = game
 
         self.join_server_button.on_press = self.open_connect_menu
+        self.options_button.on_press = self.open_options_menu
         self.connect_button.on_press = self.connect
 
         self.main_menu = Menu.create(game.root_console, [
@@ -143,6 +147,14 @@ class MainMenu:
         ], title='Connect to Server')
 
         self.menu_stack.append(connect_menu)
+
+    def open_options_menu(self, _: Button):
+        menu = Menu.create(self._game.root_console, [
+            self.player_name_input,
+            Button('Go Back', self.cancel)
+        ], title='Options', height=6)
+
+        self.menu_stack.append(menu)
 
     def connect(self, _: Button):
         ip = self.ip_input.text
