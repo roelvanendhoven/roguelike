@@ -73,7 +73,8 @@ class MessageListener:
 
                 self.listener.on_message_received(self.socket, jdata)
             # Maybe actually handle the exeption, we actually just want to break the loop
-            except Exception:
+            except Exception as e:
+                print(e)
                 break
 
         self.listener.on_disconnect(self)

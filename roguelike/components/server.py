@@ -52,8 +52,9 @@ class Server:
         self.send_to_all(get_socket_address(listener.socket) + " disconnected")
 
     def on_message_received(self, sock, event):
+        print(event)
         if event[0] == constants.GLOBAL_CHAT:
-            self.send_to_all((constants.GLOBAL_CHAT, event[1]))
+            self.send_to_all(event[1])
         elif event[0] == constants.LOBBIES:
             self.session_manager.on_lobby_event(sock, event[1])
         elif event[0] == constants.PLAYER_INTENT:
