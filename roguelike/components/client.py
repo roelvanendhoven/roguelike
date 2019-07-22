@@ -19,6 +19,7 @@ class Client:
         self.connection_event_listeners = []
 
     def connect(self, host, port):
+        # TODO error handling
         self.socket.connect((host, port))
         self._run_message_listener()
 

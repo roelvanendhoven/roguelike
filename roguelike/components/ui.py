@@ -1,24 +1,6 @@
 import tcod
 from tcod.console import Console
 from tcod.event import EventDispatch, KeyDown, TextInput
-from queue import Queue, Empty
-
-
-class QueueFactory:
-    queue = Queue()
-
-    @staticmethod
-    def get_queue():
-        return QueueFactory.queue
-
-
-def get_ui_event():
-    try:
-        queue = QueueFactory.get_queue()
-        event = queue.get(False)
-        return event
-    except Empty:
-        pass
 
 
 def calculate_middle(console, dimensions: tuple) -> tuple:
@@ -26,15 +8,6 @@ def calculate_middle(console, dimensions: tuple) -> tuple:
     new_w = (console.width // 2) - w // 2
     new_h = (console.height // 2) - h // 2
     return new_w, new_h
-
-
-class UIEvent:
-
-    def __init__(self, type: str, value: dict = None):
-        if value is None:
-            self.value = dict()
-        self.type = type
-        self.value = value
 
 
 class MenuItem:
@@ -52,18 +25,19 @@ class MenuItem:
 
 class Button(EventDispatch, MenuItem):
 
-    def __init__(self, text='Ok', event: UIEvent = None, x=0, y=0, col=(255, 255, 255)):
+    def __init__(self, text='Ok', on_press: callable = None, x=0, y=0, col=(255, 255, 255)):
         super().__init__(x, y)
         self.text = text
         self.col = col
-        self.event = event
+        self.on_press = on_press
 
     def draw(self, console: Console):
         console.print(self.x, self.y, '' + self.text + '', fg=self.col)
 
     def ev_keydown(self, event: KeyDown) -> None:
         if event.sym == tcod.event.K_RETURN:
-            QueueFactory.get_queue().put(self.event)
+            if self.on_press:
+                self.on_press(self)
             pass
 
 
@@ -77,6 +51,7 @@ class Input(MenuItem, EventDispatch):
         self.width = 0
         self.label = label
         self.text = default
+        self.on_enter_pressed = None
 
     def get_max_input_length(self):
         return self.width - len(self.label) - 3
@@ -89,6 +64,9 @@ class Input(MenuItem, EventDispatch):
     def ev_keydown(self, event: KeyDown) -> None:
         if event.sym in (tcod.event.K_BACKSPACE, 8):
             self.text = self.text[0:-1]
+        elif event.sym == tcod.event.K_RETURN:
+            if self.on_enter_pressed:
+                self.on_enter_pressed()
 
     def ev_textinput(self, event: TextInput) -> None:
         if self.get_max_input_length() > len(self.text):
