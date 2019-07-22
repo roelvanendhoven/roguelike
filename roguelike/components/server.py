@@ -39,8 +39,7 @@ class Server:
     def on_connect(self, sock):
         listener = MessageListener(sock, self)
         self.connected_listeners.append(listener)
-        print('connect: ', get_socket_address(sock))
-        self.send_to_all('connect: %s' % get_socket_address(sock))
+        self.send_to_all((constants.GLOBAL_CHAT, get_socket_address(sock) + " connected"))
         start_thread(listener.listen)
 
     def on_disconnect(self, listener):
@@ -50,7 +49,7 @@ class Server:
                 s.leave(listener.socket)
 
         self.connected_listeners.remove(listener)
-        self.send_to_all('disconnect: %s' % get_socket_address(listener.socket))
+        self.send_to_all((constants.GLOBAL_CHAT, get_socket_address(listener.socket) + " disconnected"))
 
     def on_message_received(self, sock, event):
         if event[0] == constants.GLOBAL_CHAT:
@@ -62,8 +61,7 @@ class Server:
 
     def send_to_all(self, message):
         for l in self.connected_listeners:
-            print('send message ', message, ' to ', get_socket_address(l.socket))
-            send(l.socket, message)
+            send(l.socket, (constants.GLOBAL_CHAT, message))
 
 
 if __name__ == '__main__':

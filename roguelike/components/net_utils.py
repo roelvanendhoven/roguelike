@@ -71,7 +71,7 @@ class MessageListener:
                 jdata = json.loads(data)
                 logger.debug('[client]: %s' % str(jdata))
 
-                self.listener.on_message_received(self.socket, data)
+                self.listener.on_message_received(self.socket, jdata)
             # Maybe actually handle the exeption, we actually just want to break the loop
             except Exception:
                 break
