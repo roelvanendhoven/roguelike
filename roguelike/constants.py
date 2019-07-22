@@ -1,6 +1,7 @@
 # Network related constants
 
 GLOBAL_CHAT = "GLOBAL_CHAT"
+SERVER = "SERVER"
 LOBBIES = "LOBBIES"
 
 PLAYER_INTENT = "PLAYER_INTENT"
