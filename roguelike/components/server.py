@@ -59,7 +59,7 @@ class Server:
 
         player = self.get_player_for_socket(listener.socket)
         self.players.remove(player)
-        self.send_to_all(player.name + " disconnected")
+        self.send_to_all(player,  "disconnected")
 
     def on_message_received(self, sock, event):
         player = self.get_player_for_socket(sock)
@@ -67,10 +67,10 @@ class Server:
             print("player not found")
 
         if event[0] == constants.GLOBAL_CHAT:
-            self.send_to_all(str(event[1]['player']) + ": " + str(event[1]['message']))
+            self.send_to_all(player, event[1]['message'])
         elif event[0] == constants.PLAYER_CONNECT:
             player.set_name(event[1]['name'])
-            self.send_to_all(player.name + " connected")
+            self.send_to_all(player, "connected")
         elif event[0] == constants.LOBBIES:
             self.session_manager.on_lobby_event(player, event[1])
         elif event[0] == constants.PLAYER_INTENT:
@@ -82,9 +82,9 @@ class Server:
                 return p
         return None
 
-    def send_to_all(self, message):
+    def send_to_all(self, player, message):
         for p in self.players:
-            send(p.listener.socket, (constants.GLOBAL_CHAT, {'message': message}))
+            send(p.listener.socket, (constants.GLOBAL_CHAT, {'message': message, 'player': player.name}))
 
 
 if __name__ == '__main__':
