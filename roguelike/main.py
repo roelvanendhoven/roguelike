@@ -3,8 +3,9 @@ import tcod.console
 import tcod.event
 import constants
 
-from components.ui import Input, Button, Menu, calculate_middle
+from components.ui import Input, Button, Menu, Textbox, calculate_middle
 from components import client
+from components import server
 
 # Constants
 SCREEN_WIDTH = 50
@@ -50,6 +51,7 @@ class Game:
                         self.main_menu.menu_stack[-1].dispatch(event)
                     elif self.chat_view:
                         self.chat_view.message_input.dispatch(event)
+                        self.chat_view.message_box.dispatch(event)
 
     def start(self):
         self._run_main_loop()
@@ -73,13 +75,15 @@ class ChatView:
         self.message_input.width = self.console.width - 2
         self.message_input.on_enter_pressed = self.send_message
 
+        self.message_box = Textbox(self.console)
+
     def send_message(self):
         text = self.message_input.text
         self.message_input.text = ''
         self.game.game_client.send((constants.GLOBAL_CHAT, {'message': text}))
 
     def add_message(self, message):
-        self.messages.append(message + '\n')
+        self.message_box.add_message(message + '\n')
 
     def on_connection_event(self, event):
         if event[0] == constants.GLOBAL_CHAT:
@@ -87,8 +91,7 @@ class ChatView:
 
     def draw(self, root_console):
         self.console.draw_frame(0, 0, self.console.width, self.console.height)
-        self.console.print_box(1, 1, self.console.width - 2, self.console.height - 3, ''.join(self.messages),
-                               fg=(255, 244, 122))
+        self.message_box.draw(root_console)
         self.message_input.draw(self.console)
         x, y = calculate_middle(root_console, (self.console.width, self.console.height))
         self.console.blit(root_console, x, y)
@@ -125,6 +128,7 @@ class MainMenu:
         self.join_server_button.on_press = self.open_connect_menu
         self.options_button.on_press = self.open_options_menu
         self.connect_button.on_press = self.connect
+        self.create_server_button.on_press = self.create_server
 
         self.main_menu = Menu.create(game.root_console, [
             self.create_server_button,
@@ -156,6 +160,12 @@ class MainMenu:
         ], title='Options', height=6)
 
         self.menu_stack.append(menu)
+
+    def create_server(self, _: Button):
+        # s = server.start_thread(server.Server)
+        # TODO cleanup, port shouldnt be hardcoced
+        # self._game.connect('localhost', 7777)
+        pass
 
     def connect(self, _: Button):
         ip = self.ip_input.text
