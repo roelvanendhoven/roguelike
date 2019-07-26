@@ -36,17 +36,17 @@ def read_blob(sock, size):
 # define helper functions for reading header data
 def read_long(sock):
     logger.debug('enterting readlong')
-    size = struct.calcsize("L")
+    size = struct.calcsize("<L")
     # TODO: Make sure to throw if empty packet comes through
     data = sock.recv(size)
-    logger.debug(str(struct.unpack("L", data)))
+    logger.debug(str(struct.unpack("<L", data)))
     # returning first element because unpack returns a tuple
-    return struct.unpack("L", data)[0]
+    return struct.unpack("<L", data)[0]
 
 
 def send(conn, message):
     jdata = json.dumps(message).encode('utf-8')
-    conn.sendall(struct.pack("L", len(jdata)))
+    conn.sendall(struct.pack("<L", len(jdata)))
     conn.sendall(jdata)
 
 
