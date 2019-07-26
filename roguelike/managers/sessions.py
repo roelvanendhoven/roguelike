@@ -2,24 +2,27 @@ import uuid
 import json
 import constants as c
 
-from components.net_utils import send
-
+from components.map import Map
 
 class SessionManager:
     sessions = []
 
     def on_lobby_event(self, player, event):
-        if event['action'] is 'HOST':
+        if event['action'] is 'host':
             self.host_session(player, event['dungeon_id'])
-        elif event['action'] is 'GET':
+        elif event['action'] is 'get':
             sessions = self.get_sessions_for_dungeon(event['dungeon_id'])
-            send(player.listener.socket, (c.LOBBIES, {self._serialize_sessions(sessions)}))
-        elif event['action'] is 'GET-ALL':
-            send(player.listener.socket, (c.LOBBIES, {self._serialize_sessions(self.sessions)}))
-        elif event['action'] is 'JOIN':
+            player.send((c.LOBBIES, {self._serialize_sessions(sessions)}))
+        elif event['action'] is 'get-all':
+            player.send((c.LOBBIES, {self._serialize_sessions(self.sessions)}))
+        elif event['action'] is 'join':
             self.join_session(player, event['id'])
-        elif event['action'] is 'LEAVE':
+        elif event['action'] is 'ready':
+            self.ready_session(player, event['id'], event['value'])
+        elif event['action'] is 'leave':
             self.leave_session(player, event['id'])
+
+        self.show_all_sessions_data()
 
     def on_player_intent(self, player, intent):
         session = self.get_session(intent.id)
@@ -28,7 +31,7 @@ class SessionManager:
     def get_session(self, session_id):
         for s in self.sessions:
             if s.id is session_id:
-                return s.id
+                return s
 
     def get_sessions_for_dungeon(self, dungeon_id):
         sessions = []
@@ -54,7 +57,12 @@ class SessionManager:
         self.sessions.append(session)
 
     def join_session(self, player, session_id):
-        self.get_session(session_id).join(player)
+        session = self.get_session(session_id)
+        session.join(player)
+
+    def ready_session(self, player, session_id, value):
+        session = self.get_session(session_id)
+        session.ready(player, value)
 
     def leave_session(self, player, session_id):
         session = self.get_session(session_id)
@@ -68,6 +76,10 @@ class SessionManager:
             result.append(s.serialize())
         return result
 
+    def show_all_sessions_data(self):
+        for s in self.sessions:
+            print(s.serialize)
+
 
 class Session:
     players = []
@@ -76,12 +88,34 @@ class Session:
         self.id = uuid.uuid1()
         self.dungeon_id = dungeon_id
         self.players.append(player)
+        self.map = Map(dungeon_id)
 
     def join(self, player):
         self.players.append(player)
+        player.send((c.MAP, self.map.serialize()))
+        self.send_to_all((c.LOBBIES, {'message': player.name + ' joined'}))
 
     def leave(self, player):
         self.players.remove(player)
+        self.send_to_all((c.LOBBIES, {'message': player.name + ' left'}))
+
+    def ready(self, player, value):
+        player.is_ready = value
+
+        if value:
+            message = player.name + ' is ready'
+        else:
+            message = player.name + ' is not ready'
+
+        self.send_to_all((c.LOBBIES, {'message': message}))
+
+        for p in self.players:
+            if not p.is_ready:
+                return
+        self._start()
+
+    def _start(self):
+        self.send_to_all((c.LOBBIES, {'start': 'True'}))
 
     def player_intent(self, player, action):
         print("player intent")
@@ -90,8 +124,7 @@ class Session:
         # resolve_action(result)
 
     def resolve_action(self, result):
-        for p in self.players:
-            send(p.listener.socket, (c.PLAYER_RESOLVE, result))
+        self.send_to_all((c.PLAYER_RESOLVE, result))
 
     def serialize(self):
         return json.dumps({
@@ -99,3 +132,7 @@ class Session:
             'dungeon_id': self.dungeon_id,
             'players': [p.name for p in self.players]
         })
+
+    def send_to_all(self, message):
+        for p in self.players:
+            p.send(message)

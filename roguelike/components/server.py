@@ -19,9 +19,13 @@ class Player:
 
     def __init__(self, listener):
         self.listener = listener
+        self.is_ready = False
 
     def set_name(self, name):
         self.name = name
+
+    def send(self, msg):
+        send(self.listener.socket, msg)
 
 
 class Server:
