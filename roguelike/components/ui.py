@@ -73,6 +73,43 @@ class Input(MenuItem, EventDispatch):
             self.text += event.text
 
 
+class Textbox(EventDispatch):
+    """Textbox displays a newline separated list of messages.
+
+    Textbox is built to create scroll capability as soon as the list spills over the height of the widget.
+    """
+
+    messages = []
+
+    def __init__(self, root_console: Console):
+        self._console = root_console
+        self.scroll_offset = 0
+
+    def add_message(self, message):
+        self.messages.append(message)
+        if len(self.messages) > self._console.height - 3:
+            self.scroll_offset = len(self.messages) - (self._console.height - 3)
+
+    def draw(self, root_console):
+        self._console.draw_frame(0, 0, self._console.width, self._console.height)
+        self._console.print_box(1, 1, self._console.width - 2, self._console.height - 3,
+                                ''.join(self.messages[self.scroll_offset:]),
+                                fg=(255, 244, 122))
+        if len(self.messages) > self._console.height - 3:
+            self._console.print(self._console.width - 2, 1, chr(tcod.CHAR_ARROW_N))
+            self._console.print(self._console.width - 2, self._console.height - 3, chr(tcod.CHAR_ARROW_S))
+        x, y = calculate_middle(root_console, (self._console.width, self._console.height))
+        self._console.blit(root_console, x, y)
+
+    def ev_keydown(self, event: KeyDown) -> None:
+        if event.sym == tcod.event.K_DOWN:
+            if self.scroll_offset < len(self.messages) - (self._console.height - 3):
+                self.scroll_offset += 1
+        if event.sym == tcod.event.K_UP:
+            if self.scroll_offset > 0:
+                self.scroll_offset -= 1
+
+
 class Menu(EventDispatch):
 
     def __init__(self, root_console, width: int, height: int, selected_index=0, contents=[], title=''):
