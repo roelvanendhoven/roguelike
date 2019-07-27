@@ -15,7 +15,7 @@ class SessionManager:
             sessions = self.get_sessions_for_dungeon(event['dungeon_id'])
             player.send((c.LOBBIES, {'response': 'get', "sessions": self._serialize_sessions(sessions)}))
         elif event['action'] == 'get-all':
-            player.send((c.LOBBIES, {'response': 'get', "sessions": self._serialize_sessions(self.sessions)}))
+            player.send((c.LOBBIES, {'response': 'get-all', "sessions": self._serialize_sessions(self.sessions)}))
         elif event['action'] == 'join':
             self.join_session(player, event['id'])
         elif event['action'] == 'ready':
