@@ -4,6 +4,7 @@ import constants as c
 
 from components.map import Map
 
+
 class SessionManager:
     sessions = []
 
@@ -12,9 +13,9 @@ class SessionManager:
             self.host_session(player, event['dungeon_id'])
         elif event['action'] is 'get':
             sessions = self.get_sessions_for_dungeon(event['dungeon_id'])
-            player.send((c.LOBBIES, {self._serialize_sessions(sessions)}))
+            player.send((c.LOBBIES, {'response': 'get', "sessions": self._serialize_sessions(sessions)}))
         elif event['action'] is 'get-all':
-            player.send((c.LOBBIES, {self._serialize_sessions(self.sessions)}))
+            player.send((c.LOBBIES, {'response': 'get', "sessions": self._serialize_sessions(self.sessions)}))
         elif event['action'] is 'join':
             self.join_session(player, event['id'])
         elif event['action'] is 'ready':
@@ -74,7 +75,7 @@ class SessionManager:
         result = []
         for s in sessions:
             result.append(s.serialize())
-        return result
+        return json.dumps(result)
 
     def show_all_sessions_data(self):
         for s in self.sessions:
