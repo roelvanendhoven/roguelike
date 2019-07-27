@@ -88,8 +88,8 @@ class Session:
     def __init__(self, player, dungeon_id):
         self.id = uuid.uuid1()
         self.dungeon_id = dungeon_id
-        self.players.append(player)
         self.map = Map(dungeon_id)
+        self.join(player)
 
     def join(self, player):
         self.players.append(player)
