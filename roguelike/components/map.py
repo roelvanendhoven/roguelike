@@ -20,6 +20,7 @@ class Map:
 
     def __init__(self, dungeon_id):
         self.tiles = test_map
+        self.walkables = [list(map(lambda x: x == ' ', row)) for row in self.tiles]
         self.dungeon_id = dungeon_id
 
     def serialize(self):

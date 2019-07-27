@@ -3,11 +3,37 @@ import tcod.console
 import tcod.event
 import constants
 
+from time import sleep, time
 from components.ui import Input, Button, Menu, Textbox, calculate_middle
 from components import client
 
 # Constants
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, GAME_TITLE, FONT, FONT_OPTIONS_MASK
+
+
+class LobbyManager:
+
+    def __init__(self, game_client: client.Client):
+        self._last_updated = None
+        self.game_client = game_client
+        self.sessions = []
+
+    def last_updated(self):
+        return self._last_updated
+
+    def get_lobbies(self):
+        self.game_client.send((constants.LOBBIES, {'action': 'get-all'}))
+        while not self.last_updated():
+            sleep(0.01)
+        self._last_updated = None
+        return self.sessions
+
+    def on_connection_event(self, event):
+        print(event)
+        if event[0] == constants.LOBBIES:
+            if event[1]['response'] == 'get-all':
+                self.sessions = event[1]['sessions']
+                self._last_updated = time()
 
 
 class Game:
@@ -18,6 +44,7 @@ class Game:
         self.chat_view = ChatView(self)
         self.main_menu.open()
         self.game_client: client.Client = client.Client()
+        self.lobby_manager = LobbyManager(self.game_client)
 
     def _run_main_loop(self):
         while True:
@@ -33,12 +60,12 @@ class Game:
                 for y in range(0, SCREEN_HEIGHT):
                     console.print(x, y, ' ', bg=(90, 90, 98))
                     if y % (brick_height + 1) == 0:
-                        console.print(x, y, ' ', bg=(50,50,58))
+                        console.print(x, y, ' ', bg=(50, 50, 58))
                     if y % ((brick_height * 2) + 2) - 2 < (brick_height / 2) + 1:
                         if x % (brick_width + 1) == 0:
                             console.print(x, y, ' ', bg=(50, 50, 58))
                     else:
-                        if x % (brick_width + 1) == (brick_width/2):
+                        if x % (brick_width + 1) == (brick_width / 2):
                             console.print(x, y, ' ', bg=(50, 50, 58))
 
             console.draw_frame(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, clear=False, title='Logue Regacy')
@@ -66,8 +93,14 @@ class Game:
 
     def connect(self, ip, port):
         self.game_client.add_event_listener(self.chat_view)
+        self.game_client.add_event_listener(self.lobby_manager)
+
         self.game_client.connect(ip, port)
         self.game_client.send((constants.PLAYER_CONNECT, {'name': self.main_menu.player_name_input.text}))
+        lobbies = self.lobby_manager.get_lobbies()
+        if len(lobbies) == 0:
+            self.game_client.send((constants.LOBBIES, {'action': 'host', 'dungeon_id': 0}))
+
         self.main_menu.close()
 
 
@@ -96,13 +129,19 @@ class ChatView:
     def on_connection_event(self, event):
         if event[0] == constants.GLOBAL_CHAT:
             self.add_message(event[1]['player'] + ': ' + event[1]['message'])
+        if event[0] == constants.LOBBIES:
+            print(event[1])
 
     def draw(self, root_console):
-        self.console.draw_frame(0, 0, self.console.width, self.console.height , clear=False, bg_blend=tcod.BKGND_ADD)
+        self.console.draw_frame(0, 0, self.console.width, self.console.height, clear=False, bg_blend=tcod.BKGND_ADD)
         self.message_box.draw(root_console)
         self.message_input.draw(self.console)
         x, y = calculate_middle(root_console, (self.console.width, self.console.height))
         self.console.blit(root_console, 2, root_console.height - 3 - root_console.height // 3)
+
+
+class MapView:
+    pass
 
 
 class MainMenu:
