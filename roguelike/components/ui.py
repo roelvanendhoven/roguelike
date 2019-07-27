@@ -98,8 +98,6 @@ class Textbox(EventDispatch):
         if len(self.messages) > self._console.height - 3:
             self._console.print(self._console.width - 2, 1, chr(tcod.CHAR_ARROW_N))
             self._console.print(self._console.width - 2, self._console.height - 3, chr(tcod.CHAR_ARROW_S))
-        x, y = calculate_middle(root_console, (self._console.width, self._console.height))
-        self._console.blit(root_console, x, y)
 
     def ev_keydown(self, event: KeyDown) -> None:
         if event.sym == tcod.event.K_DOWN:

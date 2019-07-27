@@ -5,16 +5,9 @@ import constants
 
 from components.ui import Input, Button, Menu, Textbox, calculate_middle
 from components import client
-from components import server
 
 # Constants
-SCREEN_WIDTH = 50
-SCREEN_HEIGHT = 30
-
-GAME_TITLE = "Net Test"
-
-FONT = 'assets/font_12x12.png'
-FONT_OPTIONS_MASK = tcod.FONT_TYPE_GREYSCALE | tcod.FONT_LAYOUT_TCOD
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT, GAME_TITLE, FONT, FONT_OPTIONS_MASK
 
 
 class Game:
@@ -32,6 +25,21 @@ class Game:
 
             tcod.console_flush()
             console.clear()
+
+            brick_height = 4
+            brick_width = 8
+
+            for x in range(0, SCREEN_WIDTH):
+                for y in range(0, SCREEN_HEIGHT):
+                    console.print(x, y, ' ', bg=(90, 90, 98))
+                    if y % (brick_height + 1) == 0:
+                        console.print(x, y, ' ', bg=(50,50,58))
+                    if y % ((brick_height * 2) + 2) - 2 < (brick_height / 2) + 1:
+                        if x % (brick_width + 1) == 0:
+                            console.print(x, y, ' ', bg=(50, 50, 58))
+                    else:
+                        if x % (brick_width + 1) == (brick_width/2):
+                            console.print(x, y, ' ', bg=(50, 50, 58))
 
             console.draw_frame(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, clear=False, title='Logue Regacy')
 
@@ -64,7 +72,7 @@ class Game:
 
 
 class ChatView:
-    console = tcod.console.Console(SCREEN_WIDTH - 4, SCREEN_HEIGHT - 6)
+    console = tcod.console.Console(SCREEN_WIDTH - 4, SCREEN_HEIGHT // 3)
     messages = []
     message_input = Input('Chat:')
 
@@ -90,11 +98,11 @@ class ChatView:
             self.add_message(event[1]['player'] + ': ' + event[1]['message'])
 
     def draw(self, root_console):
-        self.console.draw_frame(0, 0, self.console.width, self.console.height)
+        self.console.draw_frame(0, 0, self.console.width, self.console.height , clear=False, bg_blend=tcod.BKGND_ADD)
         self.message_box.draw(root_console)
         self.message_input.draw(self.console)
         x, y = calculate_middle(root_console, (self.console.width, self.console.height))
-        self.console.blit(root_console, x, y)
+        self.console.blit(root_console, 2, root_console.height - 3 - root_console.height // 3)
 
 
 class MainMenu:

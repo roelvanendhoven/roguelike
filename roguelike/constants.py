@@ -1,3 +1,5 @@
+import tcod.constants
+
 # Network related constants
 
 GLOBAL_CHAT = "GLOBAL_CHAT"
@@ -9,3 +11,11 @@ PLAYER_INTENT = "PLAYER_INTENT"
 PLAYER_RESOLVE = "PLAYER_RESOLVE"
 PLAYER_CONNECT = "PLAYER_CONNECT"
 
+# Game related constants
+
+SCREEN_WIDTH = 128
+SCREEN_HEIGHT = 72
+GAME_TITLE = "Net Test"
+FONT = 'assets/font_12x12.png'
+
+FONT_OPTIONS_MASK = tcod.FONT_TYPE_GREYSCALE | tcod.FONT_LAYOUT_TCOD
