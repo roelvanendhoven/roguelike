@@ -9,18 +9,18 @@ class SessionManager:
     sessions = []
 
     def on_lobby_event(self, player, event):
-        if event['action'] is 'host':
+        if event['action'] == 'host':
             self.host_session(player, event['dungeon_id'])
-        elif event['action'] is 'get':
+        elif event['action'] == 'get':
             sessions = self.get_sessions_for_dungeon(event['dungeon_id'])
             player.send((c.LOBBIES, {'response': 'get', "sessions": self._serialize_sessions(sessions)}))
-        elif event['action'] is 'get-all':
+        elif event['action'] == 'get-all':
             player.send((c.LOBBIES, {'response': 'get', "sessions": self._serialize_sessions(self.sessions)}))
-        elif event['action'] is 'join':
+        elif event['action'] == 'join':
             self.join_session(player, event['id'])
-        elif event['action'] is 'ready':
+        elif event['action'] == 'ready':
             self.ready_session(player, event['id'], event['value'])
-        elif event['action'] is 'leave':
+        elif event['action'] == 'leave':
             self.leave_session(player, event['id'])
 
         self.show_all_sessions_data()
