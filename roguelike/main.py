@@ -11,6 +11,7 @@ from constants import SCREEN_WIDTH, SCREEN_HEIGHT, GAME_TITLE, FONT, FONT_OPTION
 
 
 class Game:
+    background_image = tcod.image_load('assets/bricks/textures-1-3.png')
 
     def __init__(self, root_console: tcod.console.Console):
         self.root_console = root_console
@@ -26,22 +27,27 @@ class Game:
             tcod.console_flush()
             console.clear()
 
-            brick_height = 4
-            brick_width = 8
+            # brick_height = 4
+            # brick_width = 8
+            #
+            # for x in range(0, SCREEN_WIDTH):
+            #     for y in range(0, SCREEN_HEIGHT):
+            #         console.print(x, y, ' ', bg=(90, 90, 98))
+            #         if y % (brick_height + 1) == 0:
+            #             console.print(x, y, ' ', bg=(50,50,58))
+            #         if y % ((brick_height * 2) + 2) - 2 < (brick_height / 2) + 1:
+            #             if x % (brick_width + 1) == 0:
+            #                 console.print(x, y, ' ', bg=(50, 50, 58))
+            #         else:
+            #             if x % (brick_width + 1) == (brick_width/2):
+            #                 console.print(x, y, ' ', bg=(50, 50, 58))
 
-            for x in range(0, SCREEN_WIDTH):
-                for y in range(0, SCREEN_HEIGHT):
-                    console.print(x, y, ' ', bg=(90, 90, 98))
-                    if y % (brick_height + 1) == 0:
-                        console.print(x, y, ' ', bg=(50,50,58))
-                    if y % ((brick_height * 2) + 2) - 2 < (brick_height / 2) + 1:
-                        if x % (brick_width + 1) == 0:
-                            console.print(x, y, ' ', bg=(50, 50, 58))
-                    else:
-                        if x % (brick_width + 1) == (brick_width/2):
-                            console.print(x, y, ' ', bg=(50, 50, 58))
+            background_width = self.background_image.width
+            background_height = self.background_image.height
 
-            console.draw_frame(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, clear=False, title='Logue Regacy')
+            for row in range(0, constants.SCREEN_WIDTH + 16, background_width):
+                for col in range(0, constants.SCREEN_HEIGHT, background_height):
+                    self.background_image.blit(console, row, col, tcod.BKGND_ADD, 1, 1, 0)
 
             if self.game_client.connected:
                 self.chat_view.draw(console)
@@ -98,7 +104,7 @@ class ChatView:
             self.add_message(event[1]['player'] + ': ' + event[1]['message'])
 
     def draw(self, root_console):
-        self.console.draw_frame(0, 0, self.console.width, self.console.height , clear=False, bg_blend=tcod.BKGND_ADD)
+        self.console.draw_frame(0, 0, self.console.width, self.console.height, clear=False, bg_blend=tcod.BKGND_ADD)
         self.message_box.draw(root_console)
         self.message_input.draw(self.console)
         x, y = calculate_middle(root_console, (self.console.width, self.console.height))
