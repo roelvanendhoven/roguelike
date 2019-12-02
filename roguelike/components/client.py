@@ -53,6 +53,6 @@ class Client:
 
     def _run_message_listener(self):
         # logger.debug('client mss reveived')
-        listener = components.net_utils.MessageListener(self.socket, self)
-        t = Thread(target=listener.listen)
+        listener = components.net_utils.TCPMessageListener(self.socket, self)
+        t = Thread(target=listener.listen_for_events)
         t.start()

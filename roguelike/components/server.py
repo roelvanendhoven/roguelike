@@ -1,7 +1,8 @@
 import socket
 import threading
+
 import constants
-from components.net_utils import send, MessageListener, get_socket_address
+from components.net_utils import send, TCPMessageListener
 from managers.sessions import *
 
 """Server module containing server logic
@@ -51,19 +52,20 @@ class Server:
         self.server_sock.close()
 
     def on_connect(self, sock):
-        listener = MessageListener(sock, self)
+        listener = TCPMessageListener(sock)
         self.players.append(Player(listener))
-        start_thread(listener.listen)
+        start_thread(listener.listen_for_events)
 
     def on_disconnect(self, listener):
-        sessions = self.session_manager.get_sessions_for_player(listener.socket)
+        sessions = self.session_manager.get_sessions_for_player(
+            listener.socket)
         if sessions is not None:
             for s in sessions:
                 s.leave(listener.socket)
 
         player = self.get_player_for_socket(listener.socket)
         self.players.remove(player)
-        self.send_to_all(player,  "disconnected")
+        self.send_to_all(player, "disconnected")
 
     def on_message_received(self, sock, event):
         player = self.get_player_for_socket(sock)
@@ -88,7 +90,9 @@ class Server:
 
     def send_to_all(self, player, message):
         for p in self.players:
-            send(p.listener.socket, (constants.GLOBAL_CHAT, {'message': message, 'player': player.name}))
+            send(p.listener.socket, (constants.GLOBAL_CHAT,
+                                     {'message': message,
+                                      'player': player.name}))
 
 
 if __name__ == '__main__':
