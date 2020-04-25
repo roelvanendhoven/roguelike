@@ -1,7 +1,7 @@
 import socket
 import threading
 import constants
-from components.net_utils import send, MessageListener, get_socket_address
+from components.net.net_utils import send, MessageListener
 from managers.sessions import *
 
 """Server module containing server logic

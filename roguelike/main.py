@@ -3,15 +3,17 @@ import tcod.console
 import tcod.event
 import constants
 
-from components.ui import Input, Button, Menu, Textbox, calculate_middle
-from components import client
+from roguelike.components.ui.widgets.text_input import Input
+from roguelike.components.ui.widgets.button import Button
+from roguelike.components.ui.widgets.menu import Menu
+from roguelike.components.ui.widgets.text_box import Textbox
+from roguelike.components.ui.util import calculate_middle
+from roguelike.components.net import client
 
-# Constants
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, GAME_TITLE, FONT, FONT_OPTIONS_MASK
 
 
 class Game:
-    background_image = tcod.image_load('assets/bricks/textures-1-3.png')
 
     def __init__(self, root_console: tcod.console.Console):
         self.root_console = root_console
@@ -26,28 +28,6 @@ class Game:
 
             tcod.console_flush()
             console.clear()
-
-            # brick_height = 4
-            # brick_width = 8
-            #
-            # for x in range(0, SCREEN_WIDTH):
-            #     for y in range(0, SCREEN_HEIGHT):
-            #         console.print(x, y, ' ', bg=(90, 90, 98))
-            #         if y % (brick_height + 1) == 0:
-            #             console.print(x, y, ' ', bg=(50,50,58))
-            #         if y % ((brick_height * 2) + 2) - 2 < (brick_height / 2) + 1:
-            #             if x % (brick_width + 1) == 0:
-            #                 console.print(x, y, ' ', bg=(50, 50, 58))
-            #         else:
-            #             if x % (brick_width + 1) == (brick_width/2):
-            #                 console.print(x, y, ' ', bg=(50, 50, 58))
-
-            background_width = self.background_image.width
-            background_height = self.background_image.height
-
-            for row in range(0, constants.SCREEN_WIDTH + 16, background_width):
-                for col in range(0, constants.SCREEN_HEIGHT, background_height):
-                    self.background_image.blit(console, row, col, tcod.BKGND_ADD, 1, 1, 0)
 
             if self.game_client.connected:
                 self.chat_view.draw(console)

@@ -4,13 +4,13 @@ This module is responsible for handling network events on the client sides
 
 """
 
-import components.net_utils
+import components.net.net_utils
 import socket
 import constants
 
 from threading import Thread
 
-logger = components.net_utils.get_logger()
+logger = components.net.net_utils.get_logger()
 
 
 class Client:
@@ -40,7 +40,7 @@ class Client:
         self.socket.close()
 
     def send(self, message):
-        components.net_utils.send(self.socket, message)
+        components.net.net_utils.send(self.socket, message)
 
     def on_message_received(self, sock, message):
         self.send_connection_event(message)
@@ -53,6 +53,6 @@ class Client:
 
     def _run_message_listener(self):
         # logger.debug('client mss reveived')
-        listener = components.net_utils.MessageListener(self.socket, self)
+        listener = components.net.net_utils.MessageListener(self.socket, self)
         t = Thread(target=listener.listen)
         t.start()
