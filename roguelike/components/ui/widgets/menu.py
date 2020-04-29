@@ -2,15 +2,15 @@ from tcod.console import Console
 from tcod.event import EventDispatch, KeyDown, K_DOWN, K_UP, TextInput
 
 from components.ui.widgets.window import Window
-from roguelike.components.ui.util import calculate_middle
+from roguelike.components.ui.util import align_center
 
 
 class Menu(EventDispatch):
 
-    def __init__(self, root_console, width: int, height: int, selected_index=0,
+    def __init__(self, window: Window, width: int, height: int,
+                 selected_index=0,
                  contents=[], title=''):
-        self.root_console = root_console
-        self.layer_console = self._create_layer_console(width, height)
+        self.window = window
         self.width = width
         self.height = height
         self.selected_index = selected_index
@@ -25,10 +25,9 @@ class Menu(EventDispatch):
         if len(self.contents) * 2 > self.height - 3:
             print('true')
             self.height = (len(self.contents) * 2) + 3
-        x, y = calculate_middle(self.root_console, (self.width, self.height))
+        x, y = align_center(self.window, (self.width, self.height))
         self.x = x
         self.y = y
-        self.layer_console = self._create_layer_console(self.width, self.height)
         for i, element in enumerate(self.contents, 1):
             element.x = 2
             element.y = (i * 2)
@@ -45,15 +44,15 @@ class Menu(EventDispatch):
 
     def draw(self):
         if not self.hidden:
-            self.layer_console.draw_frame(0, 0, self.width, self.height,
-                                          title=self.title, )
+            self.console.draw_frame(0, 0, self.width, self.height,
+                                    title=self.title, )
             for index, elem in enumerate(self.contents, 0):
                 if index == self.selected_index:
                     elem.col = (245, 218, 66)
                 else:
                     elem.col = (255, 255, 255)
-                elem.draw(self.layer_console)
-            self.layer_console.blit(self.root_console, self.x, self.y)
+                elem.draw(self.console)
+            self.console.blit(self.console, self.x, self.y)
 
     def ev_textinput(self, event: TextInput) -> None:
         self.contents[self.selected_index].dispatch(event)

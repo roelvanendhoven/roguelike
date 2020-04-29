@@ -9,7 +9,7 @@ drawn on.
 from typing import List
 
 from tcod.console import Console
-from roguelike.components.ui.util import calculate_middle
+from roguelike.components.ui.util import align_center
 from roguelike.components.ui.util import Drawable
 
 
@@ -41,7 +41,6 @@ class Window:
         self.y = y
         self.height = height
         self.width = width
-        super().__init__()
 
     @property
     def width(self) -> int:
@@ -213,9 +212,30 @@ class Window:
 class BorderedWindow(Window):
     """Bordered Window class draws a border along it's edges.
 
-    Window subclass that draws a border around it's edges after finishing the
-    drawing of the contents.
+    Window subclass that draws a border around it's edges before the
+    drawing of the contents. Optionally, a title can be given to the window
+    which is draw for the frame of this window.
     """
+
+    def __init__(self, root_console: Console, width: int, height: int,
+                 x: int = 0, y: int = 0, title: str = '') -> None:
+        """Initialize the Window.
+
+        Initialize a window object provided a root console upon which it
+        draws it's contents.
+
+        :param root_console: The console on which this window is drawn.
+        :param width: The width of this window.
+        :param height: The height of the window.
+        :param x: The X position relative to the root console. Defaults to 0
+        or most left.
+        :param y: The Y position relative to the root console. Defaults to 0
+        for most upper.
+        :param title: The title of the window to draw
+        """
+        super().__init__(root_console, width, height, x, y)
+        self.title = title
+
 
     def draw(self) -> None:
         """Draw the contents of this Window and blit them to root console.
