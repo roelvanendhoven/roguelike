@@ -236,7 +236,6 @@ class BorderedWindow(Window):
         super().__init__(root_console, width, height, x, y)
         self.title = title
 
-
     def draw(self) -> None:
         """Draw the contents of this Window and blit them to root console.
 

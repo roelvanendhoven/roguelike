@@ -2,10 +2,10 @@ from tcod.console import Console
 from tcod.event import EventDispatch, KeyDown, K_DOWN, K_UP, TextInput
 
 from components.ui.widgets.window import Window
-from roguelike.components.ui.util import align_center
+from roguelike.components.ui.util import align_center, Widget, Container
 
 
-class Menu(EventDispatch):
+class Menu(EventDispatch, Container):
 
     def __init__(self, window: Window, width: int, height: int,
                  selected_index=0,
@@ -20,19 +20,6 @@ class Menu(EventDispatch):
         self.y = 0
         self.hidden = True
         self.input_values = {}
-
-    def pack(self):
-        if len(self.contents) * 2 > self.height - 3:
-            print('true')
-            self.height = (len(self.contents) * 2) + 3
-        x, y = align_center(self.window, (self.width, self.height))
-        self.x = x
-        self.y = y
-        for i, element in enumerate(self.contents, 1):
-            element.x = 2
-            element.y = (i * 2)
-            element.width = self.width - 3
-        return self
 
     @classmethod
     def create(cls, root_console, contents=(), width: int = 35,
