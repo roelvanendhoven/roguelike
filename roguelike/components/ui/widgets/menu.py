@@ -1,7 +1,7 @@
 from tcod.console import Console
 from tcod.event import EventDispatch, KeyDown, K_DOWN, K_UP, TextInput
 
-from components.ui.widgets.window import Window
+from roguelike.components.ui.widgets.window import Window
 from roguelike.components.ui.util import align_center, Widget, Container
 
 
@@ -29,7 +29,7 @@ class Menu(EventDispatch, Container):
         menu.hidden = False
         return menu
 
-    def draw(self):
+    def draw(self, console: Console):
         if not self.hidden:
             self.console.draw_frame(0, 0, self.width, self.height,
                                     title=self.title, )

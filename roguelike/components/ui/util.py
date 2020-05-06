@@ -2,8 +2,9 @@ from abc import ABCMeta, abstractmethod
 from typing import Union, Tuple, List
 
 from tcod.console import Console
+from tcod.event import EventDispatch
 
-from components.ui.widgets.window import Window
+from roguelike.components.ui.widgets.window import Window
 
 
 def align_center(rectangle: Union[Console, Window],
@@ -177,11 +178,11 @@ class Widget(metaclass=ABCMeta, Drawable):
 class Container(metaclass=ABCMeta, Widget):
 
     @property
-    def contents(self) -> List[Drawable]:
+    def contents(self) -> List[Union[Drawable, EventDispatch]]:
         return []
 
     @contents.setter
-    def contents(self, contents: List[Drawable]) -> None:
+    def contents(self, contents: List[Drawable, EventDispatch]) -> None:
         pass
 
     def pack(self):

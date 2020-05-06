@@ -3,6 +3,7 @@ import tcod.console
 import tcod.event
 import constants
 from components.ui.main_menu import MainMenu
+from components.ui.screen import Screen
 
 from roguelike.components.ui.widgets.text_input import Input
 from roguelike.components.ui.widgets.button import Button
@@ -16,8 +17,8 @@ from constants import SCREEN_WIDTH, SCREEN_HEIGHT, GAME_TITLE, FONT, FONT_OPTION
 
 class Game:
 
-    def __init__(self, root_console: tcod.console.Console):
-        self.root_console = root_console
+    def __init__(self):
+        self.screen = Screen()
         self.main_menu = MainMenu(self)
         self.chat_view = ChatView(self)
         self.main_menu.open()
@@ -25,10 +26,8 @@ class Game:
 
     def _run_main_loop(self):
         while True:
-            console = self.root_console
 
-            tcod.console_flush()
-            console.clear()
+            self.screen.draw()
 
             if self.game_client.connected:
                 self.chat_view.draw(console)
@@ -96,20 +95,7 @@ class ChatView:
 
 
 
-def init_tcod() -> tcod.console.Console:
-    tcod.console_set_custom_font(FONT, FONT_OPTIONS_MASK)
 
-    root_console = tcod.console_init_root(
-        SCREEN_WIDTH,
-        SCREEN_HEIGHT,
-        GAME_TITLE,
-        renderer=tcod.RENDERER_SDL2,
-        fullscreen=False,
-        vsync=True,
-        order='F')
-
-    tcod.sys_set_fps(30)
-    return root_console
 
 
 def main():

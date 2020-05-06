@@ -13,7 +13,7 @@ from roguelike.components.ui.util import align_center
 from roguelike.components.ui.util import Drawable
 
 
-class Window:
+class Window(Drawable):
     """Window class to draw widgets into a contained window.
 
     The window class serves as a container class for widgets. It uses it's
@@ -23,20 +23,18 @@ class Window:
 
     """
 
-    def __init__(self, root_console: Console, width: int, height: int,
+    def __init__(self, width: int, height: int,
                  x: int = 0, y: int = 0) -> None:
         """Initialize the Window.
 
         Initialize a window object provided a root console upon which it
         draws it's contents.
 
-        :param root_console: The console on which this window is drawn.
         :param width: The width of this window.
         :param height: The height of the window.
         :param x: The X position relative to the root console.
         :param y: The Y position relative to the root console.
         """
-        self._root_console = root_console
         self.x = x
         self.y = y
         self.height = height
@@ -59,8 +57,6 @@ class Window:
         :raises: ValueError if the window is too wide when compared to it's x
         offset
         """
-        if self.x + width > self._root_console.width:
-            raise ValueError(f'Window to wide to fit screen')
         self.width = width
 
     @property
@@ -80,8 +76,6 @@ class Window:
         :raises: ValueError if the window is too high when compared to it's y
         offset
         """
-        if self.y + height > self._root_console.height:
-            raise ValueError(f'Window to high to fit screen')
         self.height = height
 
     @property
@@ -99,7 +93,7 @@ class Window:
         :param x: The X coordinate of the window relative to the root console.
         :return: None
         """
-        if x < 0 or x > self._root_console.width:
+        if x < 0:
             raise ValueError(f'X value out of parent dimensions: {x}')
         self.x = x
 
@@ -118,7 +112,7 @@ class Window:
         :param y: The Y coordinate of the window relative to the root console.
         :return: None
         """
-        if y < 0 or y > self._root_console.height:
+        if y < 0:
             raise ValueError(f'X value out of parent dimensions: {y}')
         self.y = y
 
@@ -144,25 +138,6 @@ class Window:
         :return:
         """
         self.contents = contents
-
-    @property
-    def _root_console(self) -> Console:
-        """Return the root console which this window blits it's contents upon.
-
-        :return: The root console upon which the window draws.
-        """
-        return self._root_console
-
-    @_root_console.setter
-    def _root_console(self, console: Console) -> None:
-        """Set the root console upon which is drawn.
-
-        :param console: A tcod Console object upon which this Window
-        content is blitted after drawing it's content.
-        :return: None
-        """
-        self._root_console = console
-        pass
 
     @property
     def _layer_console(self) -> Console:
@@ -195,7 +170,7 @@ class Window:
         """
         self._layer_console = Console(height, width)
 
-    def draw(self) -> None:
+    def draw(self, console: Console) -> None:
         """Draw the contents of this Window and blit them to root console.
 
         Loop over the contents list containing the widgets within this
@@ -206,7 +181,7 @@ class Window:
         """
         for widget in self.contents:
             widget.draw(self._layer_console)
-        self._layer_console.blit(self._root_console, self.x, self.y)
+        self._layer_console.blit(console, self.x, self.y)
 
 
 class BorderedWindow(Window):
@@ -236,7 +211,7 @@ class BorderedWindow(Window):
         super().__init__(root_console, width, height, x, y)
         self.title = title
 
-    def draw(self) -> None:
+    def draw(self, console: Console) -> None:
         """Draw the contents of this Window and blit them to root console.
 
         Loop over the contents list containing the widgets within this
@@ -247,4 +222,4 @@ class BorderedWindow(Window):
         :return: None
         """
         self._layer_console.draw_frame(0, 0, self.width, self.height)
-        super(self).draw()
+        super(self).draw(console)
