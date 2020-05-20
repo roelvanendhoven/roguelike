@@ -9,7 +9,6 @@ drawn on.
 from typing import List
 
 from tcod.console import Console
-from roguelike.components.ui.util import align_center
 from roguelike.components.ui.util import Drawable
 
 
@@ -39,82 +38,7 @@ class Window(Drawable):
         self.y = y
         self.height = height
         self.width = width
-
-    @property
-    def width(self) -> int:
-        """Return the width of the window.
-
-        :return: The width of the Window as an int
-        """
-        return self.width
-
-    @width.setter
-    def width(self, width: int) -> None:
-        """Set the width of the window.
-
-        :param width: The width of the window as an int
-        :return: None
-        :raises: ValueError if the window is too wide when compared to it's x
-        offset
-        """
-        self.width = width
-
-    @property
-    def height(self) -> int:
-        """Return the height of the window.
-
-        :return: The height of the Window as an int
-        """
-        return self.height
-
-    @height.setter
-    def height(self, height: int) -> None:
-        """Set the height of the window.
-
-        :param height: The height of the window as an int
-        :return: None
-        :raises: ValueError if the window is too high when compared to it's y
-        offset
-        """
-        self.height = height
-
-    @property
-    def x(self) -> int:
-        """Return the X position of the window.
-
-        :return: The X position of the window relative to the root console.
-        """
-        return self.x
-
-    @x.setter
-    def x(self, x: int):
-        """Set the X coordinate of the window.
-
-        :param x: The X coordinate of the window relative to the root console.
-        :return: None
-        """
-        if x < 0:
-            raise ValueError(f'X value out of parent dimensions: {x}')
-        self.x = x
-
-    @property
-    def y(self) -> int:
-        """Return the Y position of the window.
-
-        :return: The Y position of the window relative to the root console.
-        """
-        return self.y
-
-    @y.setter
-    def y(self, y: int) -> None:
-        """Set the Y coordinate of the window.
-
-        :param y: The Y coordinate of the window relative to the root console.
-        :return: None
-        """
-        if y < 0:
-            raise ValueError(f'X value out of parent dimensions: {y}')
-        self.y = y
+        self.contents = []
 
     @property
     def contents(self) -> List[Drawable]:
@@ -125,7 +49,7 @@ class Window(Drawable):
 
         :return: The list of Drawables contained by this Window.
         """
-        return self.contents
+        return self._contents
 
     @contents.setter
     def contents(self, contents: List[Drawable]) -> None:
@@ -137,7 +61,7 @@ class Window(Drawable):
         :param contents: A list of Drawables to be contained in the Window
         :return:
         """
-        self.contents = contents
+        self._contents = contents
 
     @property
     def _layer_console(self) -> Console:

@@ -60,7 +60,8 @@ class Screen:
         console.
 
         """
-        self.root_console = init_tcod()
+        tcod_root = init_tcod()
+        self.root_console = tcod_root
         self.title = title
         self.windows = []
 
@@ -70,7 +71,7 @@ class Screen:
 
         :return: The title of the window as a string.
         """
-        return self.title
+        return self._title
 
     @title.setter
     def title(self, title: str) -> None:
@@ -80,7 +81,7 @@ class Screen:
         well. Examples include but are not limited to: "Game", "Screen" or
         even "Display of various graphical objects."
         """
-        self.title = title
+        self._title = title
 
     @property
     def root_console(self) -> Console:
@@ -89,7 +90,7 @@ class Screen:
         :return: The root tcod.Console upon which all graphical objects are
         drawn.
         """
-        return self.root_console
+        return self._root_console
 
     @root_console.setter
     def root_console(self, root_console: Console) -> None:
@@ -98,7 +99,7 @@ class Screen:
         :param root_console: A tcod.Console. This console will be used by
         this screen to draw all it's contents upon.
         """
-        self.root_console = root_console
+        self._root_console = root_console
 
     @property
     def windows(self) -> List[Window]:
@@ -106,7 +107,7 @@ class Screen:
 
         :return: A list of window objects
         """
-        return self.windows
+        return self._windows
 
     @windows.setter
     def windows(self, windows: List[Window]) -> None:
@@ -114,7 +115,7 @@ class Screen:
 
         :param windows: A list of Windows the screen should draw.
         """
-        self.windows = windows
+        self._windows = windows
 
     def draw(self) -> None:
         """Clears the screen and redraws it's contents.

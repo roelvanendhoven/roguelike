@@ -1,13 +1,11 @@
+from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from typing import Union, Tuple, List
 
 from tcod.console import Console
-from tcod.event import EventDispatch
-
-from roguelike.components.ui.widgets.window import Window
 
 
-def align_center(rectangle: Union[Console, Window],
+def align_center(rectangle: Union[Console, Drawable],
                  dimensions: Tuple[int, int]) -> Tuple[int, int]:
     """Return horizontally and vertically centered coordinates within a window.
 
@@ -50,8 +48,9 @@ def align_center(rectangle: Union[Console, Window],
 class Drawable(metaclass=ABCMeta):
     """Drawable interface
 
-    Abstraction never hurts. This is an interface that drawables should
-    inherit denoting their drawability.
+    Abstraction never hurts. This is an abstract class that drawables should
+    inherit denoting their drawability. Since a drawable is always drawn on a
+    console, the drawable class denotes the x, y, width and height properties.
     """
 
     @abstractmethod
@@ -63,107 +62,80 @@ class Drawable(metaclass=ABCMeta):
         """
         pass
 
-
-class Widget(metaclass=ABCMeta, Drawable):
-
-    @property
-    def console(self) -> Console:
-        """Return the root console which this window blits it's contents upon.
-
-        :return: The root console upon which the window draws.
-        """
-        return self.console
-
-    @console.setter
-    def console(self, console: Console) -> None:
-        """Set the root console upon which is drawn.
-
-        :param console: A tcod Console object upon which this Window
-        content is blitted after drawing it's content.
-        :return: None
-        """
-        self.console = console
-        pass
-
     @property
     def width(self) -> int:
-        """Return the width of the window.
+        """Return the width of the Drawable.
 
-        :return: The width of the Window as an int
+        :return: The width of the Drawable as an int
         """
         return self.width
 
     @width.setter
     def width(self, width: int) -> None:
-        """Set the width of the window.
+        """Set the width of the Drawable.
 
-        :param width: The width of the window as an int
+        :param width: The width of the Drawable as an int
         :return: None
-        :raises: ValueError if the window is too wide when compared to it's x
-        offset
         """
-        if self.x + width > self.console.width:
-            raise ValueError(f'Window to wide to fit screen')
         self.width = width
 
     @property
     def height(self) -> int:
-        """Return the height of the window.
+        """Return the height of the Drawable.
 
-        :return: The height of the Window as an int
+        :return: The height of the Drawable as an int
         """
         return self.height
 
     @height.setter
     def height(self, height: int) -> None:
-        """Set the height of the window.
+        """Set the height of the Drawable.
 
-        :param height: The height of the window as an int
+        :param height: The height of the Drawable as an int
         :return: None
-        :raises: ValueError if the window is too high when compared to it's y
-        offset
         """
-        if self.y + height > self.console.height:
-            raise ValueError(f'Window to high to fit screen')
         self.height = height
 
     @property
     def x(self) -> int:
-        """Return the X position of the window.
+        """Return the X position of the Drawable.
 
-        :return: The X position of the window relative to the root console.
+        :return: The X position of the Drawable relative to the widget it
+        is drawn upon.
         """
         return self.x
 
     @x.setter
     def x(self, x: int):
-        """Set the X coordinate of the window.
+        """Set the X coordinate of the Drawable.
 
-        :param x: The X coordinate of the window relative to the root console.
+        :param x: The X coordinate of the Drawable relative to the widget it
+        is drawn upon.
         :return: None
         """
-        if x < 0 or x > self.console.width:
-            raise ValueError(f'X value out of parent dimensions: {x}')
         self.x = x
 
     @property
     def y(self) -> int:
-        """Return the Y position of the window.
+        """Return the Y position of the Drawable.
 
-        :return: The Y position of the window relative to the root console.
+        :return: The Y position of the Drawable relative to the widget it
+        is drawn upon.
         """
         return self.y
 
     @y.setter
     def y(self, y: int) -> None:
-        """Set the Y coordinate of the window.
+        """Set the Y coordinate of the Drawable.
 
-        :param y: The Y coordinate of the window relative to the root console.
+        :param y: The Y coordinate of the Drawable relative to the widget it
+        is drawn upon.
         :return: None
         """
-        if y < 0 or y > self.console.height:
-            raise ValueError(f'X value out of parent dimensions: {y}')
         self.y = y
+
+
+class Widget(Drawable, metaclass=ABCMeta):
 
     @abstractmethod
     def draw(self, console: Console):
@@ -175,21 +147,21 @@ class Widget(metaclass=ABCMeta, Drawable):
         pass
 
 
-class Container(metaclass=ABCMeta, Widget):
+class Container(Widget, metaclass=ABCMeta):
 
     @property
-    def contents(self) -> List[Union[Drawable, EventDispatch]]:
+    def contents(self) -> List[Drawable]:
         return []
 
     @contents.setter
-    def contents(self, contents: List[Drawable, EventDispatch]) -> None:
+    def contents(self, contents: List[Drawable]) -> None:
         pass
 
-    def pack(self):
+    def pack(self, container: Drawable):
         if len(self.contents) * 2 > self.height - 3:
             print('true')
             self.height = (len(self.contents) * 2) + 3
-        x, y = align_center(self.console, (self.width, self.height))
+        x, y = align_center(container, (self.width, self.height))
         self.x = x
         self.y = y
         for i, element in enumerate(self.contents, 1):

@@ -1,8 +1,16 @@
+from __future__ import annotations
 from tcod.console import Console
 from tcod.event import EventDispatch, KeyDown, K_DOWN, K_UP, TextInput
 
-from roguelike.components.ui.widgets.window import Window
+import typing
+
 from roguelike.components.ui.util import align_center, Widget, Container
+
+if typing.TYPE_CHECKING:
+    # To prevent circular imports, type checking imports should be done
+    # inside a block like this. At runtime, TYPE_CHECKING won't evaluate to
+    # true. This is an unfortunate hack because I wasn't aware of this.
+    from roguelike.components.ui.widgets.window import Window
 
 
 class Menu(EventDispatch, Container):
@@ -22,9 +30,9 @@ class Menu(EventDispatch, Container):
         self.input_values = {}
 
     @classmethod
-    def create(cls, root_console, contents=(), width: int = 35,
+    def create(cls, window: Window, contents=(), width: int = 35,
                height: int = 10, title=''):
-        menu = cls(root_console, width, height, contents=contents, title=title)
+        menu = cls(window, width, height, contents=contents, title=title)
         menu.pack()
         menu.hidden = False
         return menu

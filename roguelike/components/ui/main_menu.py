@@ -4,13 +4,24 @@ The main_menu module contains all code related to drawing and handling the
 main menu interface.
 
 """
+from __future__ import annotations
+
+import typing
+
+from components.ui.widgets.window import Window
 from components.ui.widgets.button import Button
 from components.ui.widgets.menu import Menu
 from components.ui.widgets.text_input import Input
-from main import Game
+
+if typing.TYPE_CHECKING:
+    # To prevent circular imports, type checking imports should be done
+    # inside a block like this. At runtime, TYPE_CHECKING won't evaluate to
+    # true. This is an unfortunate hack because I wasn't aware of this
+    # dramatic implementation.
+    from roguelike.main import GameClient
 
 
-class MainMenu:
+class MainMenu(Window):
     menu_stack = []
     _menu_open = False
 
@@ -35,7 +46,7 @@ class MainMenu:
     def is_open(self):
         return self._menu_open
 
-    def __init__(self, game: Game):
+    def __init__(self, game: GameClient):
         self._game = game
 
         self.join_server_button.on_press = self.open_connect_menu
