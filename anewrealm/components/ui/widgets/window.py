@@ -9,7 +9,7 @@ drawn on.
 from typing import List
 
 from tcod.console import Console
-from roguelike.components.ui.util import Drawable
+from anewrealm.components.ui.util import Drawable
 
 
 class Window(Drawable):

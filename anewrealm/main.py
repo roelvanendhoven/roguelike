@@ -5,10 +5,10 @@ import constants
 from components.ui.main_menu import MainMenu
 from components.ui.screen import Screen
 
-from roguelike.components.ui.widgets.text_input import Input
-from roguelike.components.ui.widgets.text_box import Textbox
-from roguelike.components.ui.util import align_center
-from roguelike.components.net import client
+from anewrealm.components.ui.widgets.text_input import Input
+from anewrealm.components.ui.widgets.text_box import Textbox
+from anewrealm.components.ui.util import align_center
+from anewrealm.components.net import client
 
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 

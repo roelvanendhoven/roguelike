@@ -4,13 +4,13 @@ from tcod.event import EventDispatch, KeyDown, K_DOWN, K_UP, TextInput
 
 import typing
 
-from roguelike.components.ui.util import align_center, Widget, Container
+from anewrealm.components.ui.util import align_center, Widget, Container
 
 if typing.TYPE_CHECKING:
     # To prevent circular imports, type checking imports should be done
     # inside a block like this. At runtime, TYPE_CHECKING won't evaluate to
     # true. This is an unfortunate hack because I wasn't aware of this.
-    from roguelike.components.ui.widgets.window import Window
+    from anewrealm.components.ui.widgets.window import Window
 
 
 class Menu(EventDispatch, Container):

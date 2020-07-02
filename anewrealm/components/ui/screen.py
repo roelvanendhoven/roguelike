@@ -9,8 +9,8 @@ from typing import List
 from tcod import tcod
 from tcod.console import Console
 
-from roguelike.components.ui.widgets.window import Window
-from roguelike.constants import *
+from anewrealm.components.ui.widgets.window import Window
+from anewrealm.constants import *
 
 
 def init_tcod() -> Console:

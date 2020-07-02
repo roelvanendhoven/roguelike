@@ -1,6 +1,6 @@
 from tcod.event import EventDispatch, KeyDown, K_RETURN
 from tcod.console import Console
-from roguelike.components.ui.widgets.menu import MenuItem
+from anewrealm.components.ui.widgets.menu import MenuItem
 
 
 class Button(EventDispatch, MenuItem):

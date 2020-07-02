@@ -18,7 +18,7 @@ if typing.TYPE_CHECKING:
     # inside a block like this. At runtime, TYPE_CHECKING won't evaluate to
     # true. This is an unfortunate hack because I wasn't aware of this
     # dramatic implementation.
-    from roguelike.main import GameClient
+    from anewrealm.main import GameClient
 
 
 class MainMenu(Window):

@@ -1,0 +1,13 @@
+flake8
+pytest
+pytest-cov
+flake8-comprehensions
+flake8-bugbear
+isort
+black
+bandit
+safety
+pre-commit
+radon
+pylint
+pylint[prospector]
