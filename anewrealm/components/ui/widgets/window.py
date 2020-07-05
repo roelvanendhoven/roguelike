@@ -9,10 +9,11 @@ drawn on.
 from typing import List
 
 from tcod.console import Console
-from anewrealm.components.ui.util import Drawable
+
+from anewrealm.components.ui.util import Drawable, Container
 
 
-class Window(Drawable):
+class Window(Container):
     """Window class to draw widgets into a contained window.
 
     The window class serves as a container class for widgets. It uses it's
@@ -22,8 +23,8 @@ class Window(Drawable):
 
     """
 
-    def __init__(self, width: int, height: int,
-                 x: int = 0, y: int = 0) -> None:
+    def __init__(self, width: int, height: int, x: int = 0,
+                 y: int = 0) -> None:
         """Initialize the Window.
 
         Initialize a window object provided a root console upon which it
@@ -34,45 +35,32 @@ class Window(Drawable):
         :param x: The X position relative to the root console.
         :param y: The Y position relative to the root console.
         """
-        self.x = x
-        self.y = y
-        self.height = height
-        self.width = width
-        self.contents = []
+
+        # TODO: Solve this devilfuckery bullshit
+        #  problem: This creates some crazy pre-initialized code.
+        #  Objects are now initialized without proper coordinates and are
+        #  only corrected _after_ creating them.
+        #  problem 2: What the fuck is up with this multiple inheritance shit.
+        Drawable.__init__(self, x, y, width, height)
+        Container.__init__(self,[])
+
+        # TODO: This shit also sucks, this locks in dimensions before we
+        #  know how high and wide our window really should be given its
+        #  content. The only way to solve this is to already know what the
+        #  contents will be before creating the window. However then we
+        #  cannot inherit from window in our main menu class.
+        self._create_layer_console(self.width, self.height)
 
     @property
-    def contents(self) -> List[Drawable]:
-        """Return the Windows's content.
-
-        Return a list of the widgets contained in this window. These should
-        not necessarily be widget but anything drawable.
-
-        :return: The list of Drawables contained by this Window.
-        """
-        return self._contents
-
-    @contents.setter
-    def contents(self, contents: List[Drawable]) -> None:
-        """Set the contents of this Window.
-
-        Set the list of contents of this Window. This should be a list of
-        Drawables.
-
-        :param contents: A list of Drawables to be contained in the Window
-        :return:
-        """
-        self._contents = contents
-
-    @property
-    def _layer_console(self) -> Console:
+    def layer_console(self) -> Console:
         """Return the layer console upon which the content is drawn.
 
         :return: The Console upon which this windows draws it's content.
         """
         return self._layer_console
 
-    @_layer_console.setter
-    def _layer_console(self, layer_console: Console) -> None:
+    @layer_console.setter
+    def layer_console(self, layer_console: Console) -> None:
         """Set the layer console of this Window.
 
         :param layer_console: A tcod Console which is used to draw the
@@ -81,7 +69,17 @@ class Window(Drawable):
         """
         self._layer_console = layer_console
 
-    def _create_layer_console(self, height, width) -> None:
+    @property
+    def contents(self) -> List[Drawable]:
+        return self._contents
+
+    @contents.setter
+    def contents(self, contents: List[Drawable]):
+        self._contents = contents
+        self.pack(self)
+        self._create_layer_console(self.width, self.height)
+
+    def _create_layer_console(self, width, height) -> None:
         """Create the layer console of this window.
 
         The layer console is a sub console upon which the content of this
@@ -92,7 +90,7 @@ class Window(Drawable):
         :param width:
         :return:
         """
-        self._layer_console = Console(height, width)
+        self._layer_console = Console(width, height)
 
     def draw(self, console: Console) -> None:
         """Draw the contents of this Window and blit them to root console.
@@ -104,8 +102,8 @@ class Window(Drawable):
         :return: None
         """
         for widget in self.contents:
-            widget.draw(self._layer_console)
-        self._layer_console.blit(console, self.x, self.y)
+            widget.draw(self.layer_console)
+        self.layer_console.blit(console, self.x, self.y)
 
 
 class BorderedWindow(Window):

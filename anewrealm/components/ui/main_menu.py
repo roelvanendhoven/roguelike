@@ -8,10 +8,11 @@ from __future__ import annotations
 
 import typing
 
-from components.ui.widgets.window import Window
-from components.ui.widgets.button import Button
-from components.ui.widgets.menu import Menu
-from components.ui.widgets.text_input import Input
+from anewrealm.constants import DEFAULT_MENU_HEIGHT, DEFAULT_MENU_WIDTH
+from anewrealm.components.ui.widgets.window import Window
+from anewrealm.components.ui.widgets.button import Button
+from anewrealm.components.ui.widgets.menu import Menu
+from anewrealm.components.ui.widgets.text_input import Input
 
 if typing.TYPE_CHECKING:
     # To prevent circular imports, type checking imports should be done
@@ -22,6 +23,7 @@ if typing.TYPE_CHECKING:
 
 
 class MainMenu(Window):
+    # TODO: This is a free for all. Nothing makes sense here.
     menu_stack = []
     _menu_open = False
 
@@ -31,41 +33,25 @@ class MainMenu(Window):
     credits_button = Button('Credits')
     quit_button = Button('Quit', lambda _: exit())
 
-    connect_button = Button('Connect')
-    ip_input = Input('IP:  ', '86.83.187.168')
-    port_input = Input('Port:', '7777')
-
     player_name_input = Input('Player name:', 'Koldor')
 
-    def open(self):
-        self._menu_open = True
-
-    def close(self):
-        self._menu_open = False
-
-    def is_open(self):
-        return self._menu_open
-
     def __init__(self, game: GameClient):
+        super().__init__(DEFAULT_MENU_WIDTH, DEFAULT_MENU_HEIGHT)
         self._game = game
 
         self.join_server_button.on_press = self.open_connect_menu
         self.options_button.on_press = self.open_options_menu
-        self.connect_button.on_press = self.connect
         self.create_server_button.on_press = self.create_server
 
-        self.main_menu = Menu.create(game.root_console, [
+        self.main_menu = Menu.create(self, (
             self.create_server_button,
             self.join_server_button,
             self.options_button,
             self.credits_button,
             self.quit_button
-        ], title='MENU')
+        ), title='MENU')
 
-        self.menu_stack.append(self.main_menu)
-
-    def cancel(self, _: Button):
-        self.menu_stack.pop()
+        self.contents = [self.main_menu]
 
     def open_connect_menu(self, _: Button):
         connect_menu = Menu.create(self._game.root_console, [
@@ -83,15 +69,28 @@ class MainMenu(Window):
             Button('Go Back', self.cancel)
         ], title='Options', height=6)
 
-        self.menu_stack.append(menu)
-
     def create_server(self, _: Button):
         # s = server.start_thread(server.Server)
         # TODO cleanup, port shouldnt be hardcoced
         # self._game.connect('localhost', 7777)
         pass
 
-    def connect(self, _: Button):
+
+class ConnectMenu(Window):
+    """Menu to connect to a server.
+
+    ConnectMenu contains an IP and port input. It also handles the
+    validation of the IP and port.
+    """
+    connect_button = Button('Connect')
+    ip_input = Input('IP:  ', '86.83.187.168')
+    port_input = Input('Port:', '7777')
+
+    def __init__(self, game_client: GameClient):
+        self._game_client = game_client
+        self.connect_button.on_press = self.connect_pressed
+
+    def connect_pressed(self, _: Button):
         ip = self.ip_input.text
         port = self.port_input.text
 
@@ -102,4 +101,4 @@ class MainMenu(Window):
 
         # TODO sanitize ip
 
-        self._game.connect(ip, port)
+        self._game_client.connect(ip, port)

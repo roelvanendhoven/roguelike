@@ -6,11 +6,12 @@ which can create windows and draw their contents
 """
 from typing import List
 
-from tcod import tcod
+import tcod
 from tcod.console import Console
 
 from anewrealm.components.ui.widgets.window import Window
 from anewrealm.constants import *
+from components.ui.util import align_center
 
 
 def init_tcod() -> Console:
@@ -61,9 +62,9 @@ class Screen:
 
         """
         tcod_root = init_tcod()
-        self.root_console = tcod_root
-        self.title = title
-        self.windows = []
+        self._root_console = tcod_root
+        self._title = title
+        self._windows = []
 
     @property
     def title(self) -> str:
@@ -117,6 +118,38 @@ class Screen:
         """
         self._windows = windows
 
+    def add_window(self, window: Window):
+        """Add a window to the screens contents.
+
+        Add a window to the end of the list of contained windows by this
+        screen. This means the window is drawn last upon the screen and a
+        such overlays all other windows.
+
+        :param window: A window object to add to the screen
+        :return: None
+        """
+        self.windows.append(window)
+
+    def add_centered_window(self, window: Window):
+        """Add a window to the screen after center aligning it to the screen.
+
+        :param window: A window object to add to the screen
+        :return: None
+        """
+        window.x, window.y = align_center(self._root_console, (window.width,
+                                                               window.height))
+        self.add_window(window)
+
+    def remove_window(self, window: Window):
+        """Remove a window by it's reference.
+
+        Remove a window from the screen by its reference.
+
+        :param window: The window object to remove from the screens contents.
+        :return: None
+        """
+        self.windows.remove(window)
+
     def draw(self) -> None:
         """Clears the screen and redraws it's contents.
 
@@ -138,3 +171,21 @@ class Screen:
                                      )
         for window in self.windows:
             window.draw(self.root_console)
+
+    def _run_draw_input_loop(self):
+        """Run the draw and input loop.
+
+        First draws all contents to the screen and after that handle all input.
+
+        :return: None
+        """
+        while True:
+            self.draw()
+            # self.handle_input()
+
+    def open(self):
+        """Open the screen, start drawing and handling input.
+
+        :return: None
+        """
+        self._run_draw_input_loop()

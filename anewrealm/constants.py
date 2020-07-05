@@ -19,3 +19,8 @@ GAME_TITLE = "Net Test"
 FONT = 'assets/font_12x12.png'
 
 FONT_OPTIONS_MASK = tcod.FONT_TYPE_GREYSCALE | tcod.FONT_LAYOUT_TCOD
+
+# UI related constants
+
+DEFAULT_MENU_WIDTH = 35
+DEFAULT_MENU_HEIGHT = 14

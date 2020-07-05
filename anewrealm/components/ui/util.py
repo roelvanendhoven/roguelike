@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from abc import ABCMeta, abstractmethod
 from typing import Union, Tuple, List
 
@@ -54,6 +55,18 @@ class Drawable(metaclass=ABCMeta):
     """
 
     @abstractmethod
+    def __init__(self, x: int = 0, y: int = 0,
+                 width: int = 0, height: int = 0):
+        """Initialize properties.
+
+        This satisfies the linter.
+        """
+        self.height = height
+        self.width = width
+        self.x = x
+        self.y = y
+
+    @abstractmethod
     def draw(self, console: Console) -> None:
         """Draw this object to a console
 
@@ -68,7 +81,7 @@ class Drawable(metaclass=ABCMeta):
 
         :return: The width of the Drawable as an int
         """
-        return self.width
+        return self._width
 
     @width.setter
     def width(self, width: int) -> None:
@@ -77,7 +90,7 @@ class Drawable(metaclass=ABCMeta):
         :param width: The width of the Drawable as an int
         :return: None
         """
-        self.width = width
+        self._width = width
 
     @property
     def height(self) -> int:
@@ -85,7 +98,7 @@ class Drawable(metaclass=ABCMeta):
 
         :return: The height of the Drawable as an int
         """
-        return self.height
+        return self._height
 
     @height.setter
     def height(self, height: int) -> None:
@@ -94,7 +107,7 @@ class Drawable(metaclass=ABCMeta):
         :param height: The height of the Drawable as an int
         :return: None
         """
-        self.height = height
+        self._height = height
 
     @property
     def x(self) -> int:
@@ -103,7 +116,7 @@ class Drawable(metaclass=ABCMeta):
         :return: The X position of the Drawable relative to the widget it
         is drawn upon.
         """
-        return self.x
+        return self._x
 
     @x.setter
     def x(self, x: int):
@@ -113,7 +126,7 @@ class Drawable(metaclass=ABCMeta):
         is drawn upon.
         :return: None
         """
-        self.x = x
+        self._x = x
 
     @property
     def y(self) -> int:
@@ -122,7 +135,7 @@ class Drawable(metaclass=ABCMeta):
         :return: The Y position of the Drawable relative to the widget it
         is drawn upon.
         """
-        return self.y
+        return self._y
 
     @y.setter
     def y(self, y: int) -> None:
@@ -132,7 +145,7 @@ class Drawable(metaclass=ABCMeta):
         is drawn upon.
         :return: None
         """
-        self.y = y
+        self._y = y
 
 
 class Widget(Drawable, metaclass=ABCMeta):
@@ -147,15 +160,21 @@ class Widget(Drawable, metaclass=ABCMeta):
         pass
 
 
-class Container(Widget, metaclass=ABCMeta):
+class Container(Drawable, metaclass=ABCMeta):
+    """Container class that holds multiple drawables.
+
+    """
+
+    def __init__(self, contents: List[Drawable]):
+        self.contents = contents
 
     @property
     def contents(self) -> List[Drawable]:
-        return []
+        return self._contents
 
     @contents.setter
     def contents(self, contents: List[Drawable]) -> None:
-        pass
+        self._contents = contents
 
     def pack(self, container: Drawable):
         if len(self.contents) * 2 > self.height - 3:
