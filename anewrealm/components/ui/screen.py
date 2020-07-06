@@ -181,7 +181,14 @@ class Screen:
         """
         while True:
             self.draw()
-            # self.handle_input()
+            self._handle_input()
+
+    def _handle_input(self):
+        for event in tcod.event.get():
+            if event.type == "QUIT":
+                exit()
+            if event.type == "KEYDOWN" or event.type == "TEXTINPUT":
+                self.windows[-1].dispatch(event)
 
     def open(self):
         """Open the screen, start drawing and handling input.

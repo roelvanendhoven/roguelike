@@ -9,9 +9,9 @@ from __future__ import annotations
 import typing
 
 from anewrealm.constants import DEFAULT_MENU_HEIGHT, DEFAULT_MENU_WIDTH
-from anewrealm.components.ui.widgets.window import Window
+from anewrealm.components.ui.widgets.window import Window, BorderedWindow
 from anewrealm.components.ui.widgets.button import Button
-from anewrealm.components.ui.widgets.menu import Menu
+from anewrealm.components.ui.widgets.menu_mixin import MenuMixin
 from anewrealm.components.ui.widgets.text_input import Input
 
 if typing.TYPE_CHECKING:
@@ -22,10 +22,8 @@ if typing.TYPE_CHECKING:
     from anewrealm.main import GameClient
 
 
-class MainMenu(Window):
+class MainMenu(BorderedWindow, MenuMixin):
     # TODO: This is a free for all. Nothing makes sense here.
-    menu_stack = []
-    _menu_open = False
 
     create_server_button = Button('Create Server')
     join_server_button = Button('Join Server')
@@ -36,25 +34,25 @@ class MainMenu(Window):
     player_name_input = Input('Player name:', 'Koldor')
 
     def __init__(self, game: GameClient):
-        super().__init__(DEFAULT_MENU_WIDTH, DEFAULT_MENU_HEIGHT)
-        self._game = game
-
-        self.join_server_button.on_press = self.open_connect_menu
-        self.options_button.on_press = self.open_options_menu
-        self.create_server_button.on_press = self.create_server
-
-        self.main_menu = Menu.create(self, (
+        contents = [
             self.create_server_button,
             self.join_server_button,
             self.options_button,
             self.credits_button,
             self.quit_button
-        ), title='MENU')
+        ]
+        super().__init__(DEFAULT_MENU_WIDTH, DEFAULT_MENU_HEIGHT, contents,
+                         title='MENU')
+        self.selected_index = 0
+        self._game = game
+        self.join_server_button.on_press = self.open_connect_menu
+        self.options_button.on_press = self.open_options_menu
+        self.create_server_button.on_press = self.create_server
 
-        self.contents = [self.main_menu]
+
 
     def open_connect_menu(self, _: Button):
-        connect_menu = Menu.create(self._game.root_console, [
+        connect_menu = MenuMixin.create(self._game.root_console, [
             self.ip_input,
             self.port_input,
             self.connect_button,
@@ -64,7 +62,7 @@ class MainMenu(Window):
         self.menu_stack.append(connect_menu)
 
     def open_options_menu(self, _: Button):
-        menu = Menu.create(self._game.root_console, [
+        menu = MenuMixin.create(self._game.root_console, [
             self.player_name_input,
             Button('Go Back', self.cancel)
         ], title='Options', height=6)

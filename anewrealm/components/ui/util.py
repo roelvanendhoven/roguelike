@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import Union, Tuple, List
+from typing import Union, Tuple, List, TYPE_CHECKING
 
 from tcod.console import Console
+from tcod.event import EventDispatch
 
 
 def align_center(rectangle: Union[Console, Drawable],
@@ -54,7 +55,6 @@ class Drawable(metaclass=ABCMeta):
     console, the drawable class denotes the x, y, width and height properties.
     """
 
-    @abstractmethod
     def __init__(self, x: int = 0, y: int = 0,
                  width: int = 0, height: int = 0):
         """Initialize properties.
@@ -164,31 +164,47 @@ class Container(Drawable, metaclass=ABCMeta):
     """Container class that holds multiple drawables.
 
     """
-
-    def __init__(self, contents: List[Drawable]):
+    def __init__(self, x: int, y: int, width: int, height: int,
+                 contents: List[Union[Drawable, EventDispatch]]):
+        super().__init__(x, y, width, height)
         self.contents = contents
 
     @property
-    def contents(self) -> List[Drawable]:
+    def event_handlers(self) -> List[EventDispatch]:
+
+        # TODO make this lazy. now it filters every time. Only if contents
+        #  are updated or something
+        return list(
+            filter(lambda x: isinstance(x, EventDispatch), self.contents))
+
+    @property
+    def drawables(self) -> List[Drawable]:
+
+        # TODO make this lazy. now it filters every time
+        dr = list(filter(lambda x: isinstance(x, Widget), self.contents))
+        return dr
+
+    @property
+    def contents(self) -> List[Union[Drawable, EventDispatch]]:
         return self._contents
 
     @contents.setter
-    def contents(self, contents: List[Drawable]) -> None:
+    def contents(self, contents: List[Union[Drawable, EventDispatch]]) -> None:
         self._contents = contents
 
     def pack(self, container: Drawable):
-        if len(self.contents) * 2 > self.height - 3:
+        if len(self.drawables) * 2 > self.height - 3:
             print('true')
-            self.height = (len(self.contents) * 2) + 3
+            self.height = (len(self.drawables) * 2) + 3
         x, y = align_center(container, (self.width, self.height))
         self.x = x
         self.y = y
-        for i, element in enumerate(self.contents, 1):
+        for i, element in enumerate(self.drawables, 1):
             element.x = 2
             element.y = (i * 2)
             element.width = self.width - 3
         return self
 
     def draw(self, console: Console):
-        for widget in self.contents:
+        for widget in self.drawables:
             widget.draw(console)

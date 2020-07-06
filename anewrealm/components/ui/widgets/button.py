@@ -1,9 +1,10 @@
 from tcod.event import EventDispatch, KeyDown, K_RETURN
 from tcod.console import Console
-from anewrealm.components.ui.widgets.menu import MenuItem
+from anewrealm.components.ui.widgets.menu_mixin import MenuItem
+from anewrealm.components.ui.util import Widget
 
 
-class Button(EventDispatch, MenuItem):
+class Button(Widget, MenuItem, EventDispatch):
 
     def __init__(self, text='Ok', on_press: callable = None, x=0, y=0,
                  col=(255, 255, 255)):

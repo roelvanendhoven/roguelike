@@ -25,17 +25,7 @@ class GameClient:
             # if self.main_menu.is_open():
             #     self.main_menu.menu_stack[-1].draw()
             #
-            # for event in tcod.event.get():
-            #     if event.type == "QUIT":
-            #         if self.game_client.connected:
-            #             self.game_client.disconnect()
-            #         exit()
-            #     if event.type == "KEYDOWN" or event.type == "TEXTINPUT":
-            #         if self.main_menu.is_open():
-            #             self.main_menu.menu_stack[-1].dispatch(event)
-            #         elif self.chat_view:
-            #             self.chat_view.message_input.dispatch(event)
-            #             self.chat_view.message_box.dispatch(event)
+
 
     def _open_main_menu(self):
         """Open the game main menu.

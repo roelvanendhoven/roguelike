@@ -1,4 +1,4 @@
-from anewrealm.components.ui.widgets.menu import MenuItem
+from anewrealm.components.ui.widgets.menu_mixin import MenuItem
 from tcod.console import Console
 from tcod.event import EventDispatch, KeyDown, TextInput, K_RETURN, K_BACKSPACE
 
