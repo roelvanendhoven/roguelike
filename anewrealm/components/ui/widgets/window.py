@@ -22,6 +22,10 @@ class Window(Container, EventDispatch):
     drawing the contents on the sub window layer the entire console is
     blitted onto the root console.
 
+    TODO: The Window class now subclasses Eventdispatch to make the screen
+     class happy. However it doens't actually dispatch any events itself.
+     That is handled by subclassers of window. This needs to be implemented
+     nicer.
     """
 
     def __init__(self, width: int, height: int,
@@ -37,11 +41,6 @@ class Window(Container, EventDispatch):
         :param x: The X position relative to the root console.
         :param y: The Y position relative to the root console.
         """
-        # TODO: This shit also sucks, this locks in dimensions before we
-        #  know how high and wide our window really should be given its
-        #  content. The only way to solve this is to already know what the
-        #  contents will be before creating the window. However then we
-        #  cannot inherit from window in our main menu class.
         super().__init__(x, y, width, height, contents)
         self.pack(self)
         self._create_layer_console(self.width, self.height)
