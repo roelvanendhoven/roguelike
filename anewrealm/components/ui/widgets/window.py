@@ -42,7 +42,6 @@ class Window(Container, EventDispatch):
         :param y: The Y position relative to the root console.
         """
         super().__init__(x, y, width, height, contents)
-        self.pack(self)
         self._create_layer_console(self.width, self.height)
 
     @property
@@ -89,12 +88,13 @@ class Window(Container, EventDispatch):
         self.layer_console.blit(console, self.x, self.y)
 
 
+
 class BorderedWindow(Window):
     """Bordered Window class draws a border along it's edges.
 
     Window subclass that draws a border around it's edges before the
     drawing of the contents. Optionally, a title can be given to the window
-    which is draw for the frame of this window.
+    which is drawn for the frame of this window.
     """
 
     def __init__(self, width: int, height: int,

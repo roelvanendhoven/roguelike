@@ -1,10 +1,18 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import Union, Tuple, List, TYPE_CHECKING
+from typing import Union, Tuple, List, Dict, TYPE_CHECKING
 
 from tcod.console import Console
 from tcod.event import EventDispatch
+
+if TYPE_CHECKING:
+    # To prevent circular imports, type checking imports should be done
+    # inside a block like this. At runtime, TYPE_CHECKING won't evaluate to
+    # true. This is an unfortunate hack because I wasn't aware of this
+    # dramatic implementation.
+    from components.ui.screen import Screen
+    from components.ui.widgets.window import Window
 
 
 def align_center(rectangle: Union[Console, Drawable],
@@ -56,7 +64,7 @@ class Drawable(metaclass=ABCMeta):
     """
 
     def __init__(self, x: int = 0, y: int = 0,
-                 width: int = 0, height: int = 0):
+                 width: int = 1, height: int = 1):
         """Initialize properties.
 
         This satisfies the linter.
@@ -150,6 +158,11 @@ class Drawable(metaclass=ABCMeta):
 
 class Widget(Drawable, metaclass=ABCMeta):
 
+    def __init__(self, x: int = 0, y: int = 0,
+                 width: int = 1, height: int = 1):
+        super().__init__(x, y, width, height)
+        self.event_listeners = dict()
+
     @abstractmethod
     def draw(self, console: Console):
         """Draw this object to a console
@@ -159,19 +172,80 @@ class Widget(Drawable, metaclass=ABCMeta):
         """
         pass
 
+    @property
+    def event_listeners(self):
+        """Return the list of event_listeners of this Widgets
+
+        :return:
+        """
+        return self._event_listeners
+
+    @event_listeners.setter
+    def event_listeners(self, event_listeners: Dict[str, List[Union[Screen,
+                                                                    Window,
+                                                                    Widget]]]):
+        self._event_listeners = event_listeners
+        pass
+
+
+class LayoutManager(metaclass=ABCMeta):
+    """Layout interface.
+
+    Container objects can implement a layout manager to lay out
+    their contained widgets.
+    """
+
+    @staticmethod
+    @abstractmethod
+    def layout_container(container: Container) -> None:
+        """Lay out the containers components
+
+        :return: None
+        """
+        return None
+
+
+class MenuLayout(LayoutManager):
+    """Layoutmanager for menus.
+
+    MenuLayout is a layout manager used for vertical menu's. It aligns the
+    elements spaced by a blank line.
+    """
+
+    @staticmethod
+    def layout_container(container: Container) -> None:
+        """Lay out a container vertically with a gap of 1.
+
+        Lay out all the elements within a container. Automatically stretches
+        the container vertically if elements don't fit.
+
+        :param container: A container object to lay out.
+        :return:
+        """
+        if len(container.drawables) * 2 > container.height - 3:
+            print('true')
+            container.height = (len(container.drawables) * 2) + 3
+            # TODO: This should invalidate parent dimensions of the container
+        for i, element in enumerate(container.drawables, 1):
+            element.x = 2
+            element.y = (i * 2)
+            element.width = container.width - 3
+
 
 class Container(Drawable, metaclass=ABCMeta):
     """Container class that holds multiple drawables.
 
     """
+
     def __init__(self, x: int, y: int, width: int, height: int,
-                 contents: List[Union[Drawable, EventDispatch]]):
+                 contents: List[Union[Drawable, EventDispatch]],
+                 layout: LayoutManager = MenuLayout):
         super().__init__(x, y, width, height)
         self.contents = contents
+        self.layout = layout
 
     @property
     def event_handlers(self) -> List[EventDispatch]:
-
         # TODO make this lazy. now it filters every time. Only if contents
         #  are updated or something
         return list(
@@ -179,7 +253,6 @@ class Container(Drawable, metaclass=ABCMeta):
 
     @property
     def drawables(self) -> List[Drawable]:
-
         # TODO make this lazy. now it filters every time
         dr = list(filter(lambda x: isinstance(x, Widget), self.contents))
         return dr
@@ -192,18 +265,14 @@ class Container(Drawable, metaclass=ABCMeta):
     def contents(self, contents: List[Union[Drawable, EventDispatch]]) -> None:
         self._contents = contents
 
-    def pack(self, container: Drawable):
-        if len(self.drawables) * 2 > self.height - 3:
-            print('true')
-            self.height = (len(self.drawables) * 2) + 3
-        x, y = align_center(container, (self.width, self.height))
-        self.x = x
-        self.y = y
-        for i, element in enumerate(self.drawables, 1):
-            element.x = 2
-            element.y = (i * 2)
-            element.width = self.width - 3
-        return self
+    @property
+    def layout(self):
+        return self._layout
+
+    @layout.setter
+    def layout(self, layout: LayoutManager):
+        self._layout = layout
+        self._layout.layout_container(self)
 
     def draw(self, console: Console):
         for widget in self.drawables:

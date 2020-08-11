@@ -4,14 +4,21 @@ The screen module contains all code related to setting up the screen for the
 game and initializing tcod. Next to that it also provides a screen class
 which can create windows and draw their contents
 """
-from typing import List
+from __future__ import annotations
+from typing import List, TYPE_CHECKING
 
 import tcod
 from tcod.console import Console
 
-from anewrealm.components.ui.widgets.window import Window
 from anewrealm.constants import *
 from components.ui.util import align_center
+
+if TYPE_CHECKING:
+    # To prevent circular imports, type checking imports should be done
+    # inside a block like this. At runtime, TYPE_CHECKING won't evaluate to
+    # true. This is an unfortunate hack because I wasn't aware of this
+    # dramatic implementation.
+    from anewrealm.components.ui.widgets.window import Window
 
 
 def init_tcod() -> Console:
@@ -184,6 +191,11 @@ class Screen:
             self._handle_input()
 
     def _handle_input(self):
+        """Handle all input related events.
+
+        This method handles all input related events,
+        :return: None
+        """
         for event in tcod.event.get():
             if event.type == "QUIT":
                 exit()
