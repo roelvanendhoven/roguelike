@@ -195,65 +195,85 @@ class LayoutManager(metaclass=ABCMeta):
     their contained widgets.
     """
 
-    @staticmethod
+    def __init__(self):
+        self.drawables = []
+        self.change_listeners = []
+
+    @property
+    def drawables(self) -> List[Drawable]:
+        return self._drawables
+
+    @drawables.setter
+    def drawables(self, drawables: List[Drawable]):
+        self._drawables = drawables
+
     @abstractmethod
-    def layout_container(container: Container) -> None:
-        """Lay out the containers components
+    def layout_container(self, parent: Container) -> None:
+        """Lay out the containers components.
+
+        This method should implement the way that this widget should lay out
+        it's contained widgets.
 
         :return: None
         """
         return None
 
+    @property
+    def change_listeners(self) -> List[callable]:
+        return self._change_listeners
 
-class MenuLayout(LayoutManager):
-    """Layoutmanager for menus.
+    @change_listeners.setter
+    def change_listeners(self, change_listeners: List[callable]):
+        self._change_listeners = change_listeners
 
-    MenuLayout is a layout manager used for vertical menu's. It aligns the
-    elements spaced by a blank line.
-    """
+    def add_change_listener(self, listener: callable):
+        self.change_listeners.append(listener)
 
-    @staticmethod
-    def layout_container(container: Container) -> None:
-        """Lay out a container vertically with a gap of 1.
+    def remove_change_listener(self, listener: callable):
+        self.change_listeners.remove(listener)
 
-        Lay out all the elements within a container. Automatically stretches
-        the container vertically if elements don't fit.
+    def remove_change_listener_by_index(self, index: int):
+        self.change_listeners.pop(index)
 
-        :param container: A container object to lay out.
-        :return:
-        """
-        if len(container.drawables) * 2 > container.height - 3:
-            print('true')
-            container.height = (len(container.drawables) * 2) + 3
-            # TODO: This should invalidate parent dimensions of the container
-        for i, element in enumerate(container.drawables, 1):
-            element.x = 2
-            element.y = (i * 2)
-            element.width = container.width - 3
+    def notify_dimensions_changed(self):
+        for listener in self.change_listeners:
+            listener()
 
 
 class Container(Drawable, metaclass=ABCMeta):
     """Container class that holds multiple drawables.
 
+    A container is a class that contains multiple event listeners or
+    drawables.
+
+    The container class can hold event listeners and drawables alike.
+    Setting the content of the Container splits these into the
+    event_handlers and drawables accessor methods. Classes that use
+    containers can differentiate between drawables and event_handlers this
+    way since not all drawables need to handle events and not all
+    event_handlers have to be drawn.
+
     """
 
-    def __init__(self, x: int, y: int, width: int, height: int,
-                 contents: List[Union[Drawable, EventDispatch]],
-                 layout: LayoutManager = MenuLayout):
+    def __init__(self, x: int = 0, y: int = 0, width: int = 1, height: int = 1,
+                 contents: List[Union[Drawable, EventDispatch]] = None):
         super().__init__(x, y, width, height)
+        self.parent = None
+        self._layout_manager = None
         self.contents = contents
-        self.layout = layout
+        # TODO: ability to set layout
 
     @property
     def event_handlers(self) -> List[EventDispatch]:
-        # TODO make this lazy. now it filters every time. Only if contents
-        #  are updated or something
+        if self._event_handlers:
+            return self._event_handlers
         return list(
             filter(lambda x: isinstance(x, EventDispatch), self.contents))
 
     @property
     def drawables(self) -> List[Drawable]:
-        # TODO make this lazy. now it filters every time
+        if self._drawables:
+            return self._drawables
         dr = list(filter(lambda x: isinstance(x, Widget), self.contents))
         return dr
 
@@ -263,17 +283,89 @@ class Container(Drawable, metaclass=ABCMeta):
 
     @contents.setter
     def contents(self, contents: List[Union[Drawable, EventDispatch]]) -> None:
+        self._event_handlers = None
+        self._drawables = None
         self._contents = contents
 
     @property
-    def layout(self):
-        return self._layout
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def parent(self, parent: Container):
+        self._parent = parent
+        pass
+
+    @property
+    def layout(self) -> LayoutManager:
+        return self._layout_manager
 
     @layout.setter
-    def layout(self, layout: LayoutManager):
-        self._layout = layout
-        self._layout.layout_container(self)
+    def layout(self, layout_manager: LayoutManager):
+        """Set a layout for the container
+
+        :param layout_manager:
+        :return:
+        """
+        self._layout_manager = layout_manager
+        if self.layout:
+            self.layout.drawables = self.drawables
+            self.layout.add_change_listener(self.invalidate)
+        self.invalidate()
+
+    def invalidate(self, parent: Container = None):
+        """invalidate the containers layout and signal upwards.
+
+        Invalidate the containers layout, signifying that content has
+        changed and now the container needs to relayout itself. Signals
+        upwards to parent containers and invalidates them too.
+
+        :return: None
+        """
+        if self.layout:
+            print(type(parent))
+            if self.parent and type(self.parent) == Container:
+                self.layout.layout_container(parent)
+                self.parent.invalidate()
+            else:
+                self.layout.layout_container(self)
 
     def draw(self, console: Console):
         for widget in self.drawables:
             widget.draw(console)
+
+
+class MenuLayout(LayoutManager):
+    """Layoutmanager for menus.
+
+    MenuLayout is a layout manager used for vertical menu's. It aligns the
+    elements spaced by a blank line.
+    """
+
+    def layout_container(self, parent: Container = None) -> None:
+        """Lay out a container vertically with a gap of 1.
+
+        Lay out all the elements within a container. Automatically stretches
+        the container vertically if elements don't fit. This invalidates the
+        layout of the parent container.
+
+        :param parent: The parent container
+        :return:
+        """
+        print(parent, 'Calling')
+        if len(parent.drawables) * 2 > parent.height - 3:
+            print('true')
+            parent.height = (len(parent.drawables) * 2) + 3
+            self.notify_dimensions_changed()
+        for i, element in enumerate(parent.drawables, 1):
+            element.x = 2
+            element.y = (i * 2)
+            element.width = parent.width - 3
+
+class CenteredMenu(MenuLayout):
+
+    def layout_container(self, parent: Container = None) -> None:
+        # TODO: Hier verder gaan
+        super().layout_container(parent)
+        parent.x, parent.y = align_center(parent, (parent.width,
+                                                               parent.height))

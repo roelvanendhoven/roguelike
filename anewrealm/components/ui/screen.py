@@ -11,7 +11,7 @@ import tcod
 from tcod.console import Console
 
 from anewrealm.constants import *
-from components.ui.util import align_center
+from components.ui.util import align_center, Container
 
 if TYPE_CHECKING:
     # To prevent circular imports, type checking imports should be done
@@ -49,7 +49,7 @@ def init_tcod() -> Console:
     return root_console
 
 
-class Screen:
+class Screen(Container):
     """Screen class that contains windows and draws them to a tcod Console.
 
     The screen class is the topmost class related to drawing to a tcod root
@@ -68,6 +68,7 @@ class Screen:
         console.
 
         """
+        super().__init__(width=SCREEN_WIDTH, height=SCREEN_HEIGHT)
         tcod_root = init_tcod()
         self._root_console = tcod_root
         self._title = title
@@ -135,6 +136,7 @@ class Screen:
         :param window: A window object to add to the screen
         :return: None
         """
+        window.invalidate(self)
         self.windows.append(window)
 
     def add_centered_window(self, window: Window):
@@ -171,8 +173,8 @@ class Screen:
         """
         tcod.console_flush()
         self.root_console.clear()
-        self.root_console.draw_frame(0, 0, self.root_console.width,
-                                     self.root_console.height,
+        self.root_console.draw_frame(0, 0, self.width,
+                                     self.height,
                                      clear=False, bg_blend=tcod.BKGND_ADD,
                                      title=self.title
                                      )

@@ -42,6 +42,7 @@ class Window(Container, EventDispatch):
         :param y: The Y position relative to the root console.
         """
         super().__init__(x, y, width, height, contents)
+        # TODO: find a way to make a layoutcontainer agnostic.
         self._create_layer_console(self.width, self.height)
 
     @property
@@ -69,11 +70,15 @@ class Window(Container, EventDispatch):
         window is drawn. In the draw cycle, every widget contained by this
         window is drawn to this layer console.
 
-        :param height:
-        :param width:
+        :param height: the height of the layer console
+        :param width: the width of the layer console
         :return:
         """
         self._layer_console = Console(width, height)
+
+    def invalidate(self, parent: Container = None):
+        super().invalidate(parent)
+        self._create_layer_console(self.width, self.height)
 
     def draw(self, console: Console) -> None:
         """Draw the contents of this Window and blit them to root console.
@@ -86,7 +91,6 @@ class Window(Container, EventDispatch):
         """
         super().draw(self.layer_console)
         self.layer_console.blit(console, self.x, self.y)
-
 
 
 class BorderedWindow(Window):
