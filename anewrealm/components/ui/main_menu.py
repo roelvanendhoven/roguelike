@@ -13,7 +13,6 @@ from anewrealm.components.ui.widgets.window import Window, BorderedWindow
 from anewrealm.components.ui.widgets.button import Button
 from anewrealm.components.ui.widgets.menu_mixin import MenuMixin
 from anewrealm.components.ui.widgets.text_input import Input
-from components.ui.util import MenuLayout, CenteredMenu
 
 if typing.TYPE_CHECKING:
     # To prevent circular imports, type checking imports should be done
@@ -28,11 +27,11 @@ class MainMenu(BorderedWindow, MenuMixin):
     # TODO: Window is now not a container in itself. It should have a
     #  container as a field which can listen to changes.
 
-    create_server_button = Button('Create Server')
-    join_server_button = Button('Join Server')
-    options_button = Button('Options')
-    credits_button = Button('Credits')
-    quit_button = Button('Quit', lambda _: exit())
+    create_server_button = Button('Create Server', x=2, y=1)
+    join_server_button = Button('Join Server', x=2, y=3)
+    options_button = Button('Options', x=2, y=5)
+    credits_button = Button('Credits', x=2, y=7)
+    quit_button = Button('Quit', lambda _: exit(), x=2, y=9)
 
     player_name_input = Input('Player name:', 'Koldor')
 
@@ -46,7 +45,6 @@ class MainMenu(BorderedWindow, MenuMixin):
         ]
         super().__init__(DEFAULT_MENU_WIDTH, DEFAULT_MENU_HEIGHT, contents,
                          title='MENU')
-        self.layout = CenteredMenu()
         self.selected_index = 0
         self._game = game
         self.join_server_button.on_press = self.open_connect_menu

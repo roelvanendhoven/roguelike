@@ -41,7 +41,7 @@ def init_tcod() -> Console:
         SCREEN_HEIGHT,
         GAME_TITLE,
         renderer=tcod.RENDERER_SDL2,
-        fullscreen=False,
+        fullscreen=True,
         vsync=True,
         order='F')
 
@@ -71,6 +71,7 @@ class Screen(Container):
         super().__init__(width=SCREEN_WIDTH, height=SCREEN_HEIGHT)
         tcod_root = init_tcod()
         self._root_console = tcod_root
+        self.focused_window = None
         self._title = title
         self._windows = []
 
@@ -126,6 +127,14 @@ class Screen(Container):
         """
         self._windows = windows
 
+    @property
+    def focused_window(self) -> Window:
+        return self._focused_window
+
+    @focused_window.setter
+    def focused_window(self, window: Window):
+        self._focused_window = window
+
     def add_window(self, window: Window):
         """Add a window to the screens contents.
 
@@ -136,7 +145,6 @@ class Screen(Container):
         :param window: A window object to add to the screen
         :return: None
         """
-        window.invalidate(self)
         self.windows.append(window)
 
     def add_centered_window(self, window: Window):
@@ -173,11 +181,12 @@ class Screen(Container):
         """
         tcod.console_flush()
         self.root_console.clear()
-        self.root_console.draw_frame(0, 0, self.width,
-                                     self.height,
-                                     clear=False, bg_blend=tcod.BKGND_ADD,
-                                     title=self.title
-                                     )
+        # self.root_console.draw_frame(0, 0, self.width,
+        #                              self.height,
+        #                              clear=False, bg_blend=tcod.BKGND_ADD,
+        #                              title=self.title,
+        #                              fg=(150,150,150)
+        #                              )
         for window in self.windows:
             window.draw(self.root_console)
 
@@ -202,7 +211,8 @@ class Screen(Container):
             if event.type == "QUIT":
                 exit()
             if event.type == "KEYDOWN" or event.type == "TEXTINPUT":
-                self.windows[-1].dispatch(event)
+                if self.focused_window:
+                    self.focused_window.dispatch(event)
 
     def open(self):
         """Open the screen, start drawing and handling input.

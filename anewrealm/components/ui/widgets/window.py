@@ -29,7 +29,8 @@ class Window(Container, EventDispatch):
     """
 
     def __init__(self, width: int, height: int,
-                 contents: List[Union[Drawable, EventDispatch]], x: int = 0,
+                 contents: List[Union[Drawable, EventDispatch]] = [], x: int
+                 = 0,
                  y: int = 0) -> None:
         """Initialize the Window.
 
@@ -42,7 +43,6 @@ class Window(Container, EventDispatch):
         :param y: The Y position relative to the root console.
         """
         super().__init__(x, y, width, height, contents)
-        # TODO: find a way to make a layoutcontainer agnostic.
         self._create_layer_console(self.width, self.height)
 
     @property
@@ -75,10 +75,6 @@ class Window(Container, EventDispatch):
         :return:
         """
         self._layer_console = Console(width, height)
-
-    def invalidate(self, parent: Container = None):
-        super().invalidate(parent)
-        self._create_layer_console(self.width, self.height)
 
     def draw(self, console: Console) -> None:
         """Draw the contents of this Window and blit them to root console.
@@ -131,5 +127,5 @@ class BorderedWindow(Window):
         :return: None
         """
         self.layer_console.draw_frame(0, 0, self.width, self.height,
-                                      title=self.title)
+                                      title=self.title, fg=self.fg, bg=self.bg)
         super().draw(console)

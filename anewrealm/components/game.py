@@ -8,10 +8,7 @@ For now this module contains a rudimentary loop switching turns between players.
 from typing import List
 import tcod.console
 
-class Map:
-    tiles = [
-        []
-    ]
+from anewrealm.components.ui.util import Drawable
 
 
 class Action():
@@ -19,7 +16,7 @@ class Action():
     type = None
 
 
-class Entity(object):
+class Entity(Drawable):
 
     def __init__(self, x, y, char, col):
         self.x = x
@@ -29,15 +26,17 @@ class Entity(object):
         self.col = col
 
     def draw(self, console: tcod.console.Console):
-        console.print(self.x,self.y,self.char,fg=self.col)
+        console.print(self.x, self.y, self.char, fg=self.col)
 
 
 class Player:
 
-    def __init__(self, name, col):
+    def __init__(self, name, col, x=1, y=1):
         self.name = name
         self.col = col
-        self.entity = Entity(5, 5, '@', col)
+        self.x = x
+        self.y = y
+        self.entity = Entity(self.x, self.y, '@', col)
 
 
 class GameState:

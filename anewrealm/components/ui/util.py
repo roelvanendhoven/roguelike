@@ -6,6 +6,8 @@ from typing import Union, Tuple, List, Dict, TYPE_CHECKING
 from tcod.console import Console
 from tcod.event import EventDispatch
 
+from constants import DEFAULT_UI_FOREGROUND, DEFAULT_UI_BACKGROUND
+
 if TYPE_CHECKING:
     # To prevent circular imports, type checking imports should be done
     # inside a block like this. At runtime, TYPE_CHECKING won't evaluate to
@@ -56,7 +58,7 @@ def align_center(rectangle: Union[Console, Drawable],
 
 
 class Drawable(metaclass=ABCMeta):
-    """Drawable interface
+    """Drawable interface.
 
     Abstraction never hurts. This is an abstract class that drawables should
     inherit denoting their drawability. Since a drawable is always drawn on a
@@ -73,6 +75,8 @@ class Drawable(metaclass=ABCMeta):
         self.width = width
         self.x = x
         self.y = y
+        self.fg = DEFAULT_UI_FOREGROUND
+        self.bg = DEFAULT_UI_BACKGROUND
 
     @abstractmethod
     def draw(self, console: Console) -> None:
@@ -154,6 +158,38 @@ class Drawable(metaclass=ABCMeta):
         :return: None
         """
         self._y = y
+
+    @property
+    def fg(self) -> Tuple[int, int, int]:
+        """Return the foreground color.
+
+        :return:
+        """
+        return self._fg
+
+    @fg.setter
+    def fg(self, color: Tuple[int, int, int]) -> None:
+        """Set the foreground color.
+
+        :param color: A Tuple signifying RGB values.
+        """
+        self._fg = color
+
+    @property
+    def bg(self) -> Tuple[int, int, int]:
+        """Return the background color.
+
+        :return:
+        """
+        return self._bg
+
+    @bg.setter
+    def bg(self, color: Tuple[int, int, int]) -> None:
+        """Set the background color.
+
+        :param color: A Tuple signifying RGB values.
+        """
+        self._bg = color
 
 
 class Widget(Drawable, metaclass=ABCMeta):
@@ -256,26 +292,23 @@ class Container(Drawable, metaclass=ABCMeta):
     """
 
     def __init__(self, x: int = 0, y: int = 0, width: int = 1, height: int = 1,
-                 contents: List[Union[Drawable, EventDispatch]] = None):
+                 contents: List[Union[Drawable, EventDispatch]] = []):
         super().__init__(x, y, width, height)
         self.parent = None
         self._layout_manager = None
         self.contents = contents
-        # TODO: ability to set layout
 
     @property
     def event_handlers(self) -> List[EventDispatch]:
         if self._event_handlers:
             return self._event_handlers
-        return list(
-            filter(lambda x: isinstance(x, EventDispatch), self.contents))
+        return []
 
     @property
     def drawables(self) -> List[Drawable]:
         if self._drawables:
             return self._drawables
-        dr = list(filter(lambda x: isinstance(x, Widget), self.contents))
-        return dr
+        return []
 
     @property
     def contents(self) -> List[Union[Drawable, EventDispatch]]:
@@ -283,8 +316,10 @@ class Container(Drawable, metaclass=ABCMeta):
 
     @contents.setter
     def contents(self, contents: List[Union[Drawable, EventDispatch]]) -> None:
-        self._event_handlers = None
-        self._drawables = None
+        self._event_handlers = list(
+            filter(lambda x: isinstance(x, EventDispatch), contents))
+        self._drawables = list(
+            filter(lambda x: isinstance(x, Drawable), contents))
         self._contents = contents
 
     @property
@@ -296,76 +331,6 @@ class Container(Drawable, metaclass=ABCMeta):
         self._parent = parent
         pass
 
-    @property
-    def layout(self) -> LayoutManager:
-        return self._layout_manager
-
-    @layout.setter
-    def layout(self, layout_manager: LayoutManager):
-        """Set a layout for the container
-
-        :param layout_manager:
-        :return:
-        """
-        self._layout_manager = layout_manager
-        if self.layout:
-            self.layout.drawables = self.drawables
-            self.layout.add_change_listener(self.invalidate)
-        self.invalidate()
-
-    def invalidate(self, parent: Container = None):
-        """invalidate the containers layout and signal upwards.
-
-        Invalidate the containers layout, signifying that content has
-        changed and now the container needs to relayout itself. Signals
-        upwards to parent containers and invalidates them too.
-
-        :return: None
-        """
-        if self.layout:
-            print(type(parent))
-            if self.parent and type(self.parent) == Container:
-                self.layout.layout_container(parent)
-                self.parent.invalidate()
-            else:
-                self.layout.layout_container(self)
-
     def draw(self, console: Console):
         for widget in self.drawables:
             widget.draw(console)
-
-
-class MenuLayout(LayoutManager):
-    """Layoutmanager for menus.
-
-    MenuLayout is a layout manager used for vertical menu's. It aligns the
-    elements spaced by a blank line.
-    """
-
-    def layout_container(self, parent: Container = None) -> None:
-        """Lay out a container vertically with a gap of 1.
-
-        Lay out all the elements within a container. Automatically stretches
-        the container vertically if elements don't fit. This invalidates the
-        layout of the parent container.
-
-        :param parent: The parent container
-        :return:
-        """
-        print(parent, 'Calling')
-        if len(parent.drawables) * 2 > parent.height - 3:
-            print('true')
-            parent.height = (len(parent.drawables) * 2) + 3
-            self.notify_dimensions_changed()
-        for i, element in enumerate(parent.drawables, 1):
-            element.x = 2
-            element.y = (i * 2)
-            element.width = parent.width - 3
-
-class CenteredMenu(MenuLayout):
-
-    def layout_container(self, parent: Container = None) -> None:
-        # TODO: Hier verder gaan
-        super().layout_container(parent)
-        parent.x, parent.y = align_center(parent, (parent.width,
-                                                               parent.height))
